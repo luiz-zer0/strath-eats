@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: my-django-backend
+    runtime: python
+    buildCommand: "pip install -r backend/requirements.txt && cd backend && python manage.py collectstatic --no-input"
+    startCommand: "gunicorn stratheats.wsgi:application --chdir backend"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: my-database
+      # Add your other env vars here
+  - type: static
+    name: my-react-frontend
+    buildCommand: "npm install && npm run build"
+    staticPublishPath: "frontend/dist" # Adjust this to your build output folder
