@@ -6,44 +6,31 @@ export const OrdersProvider = ({ children }) => {
   const [orders, setOrders] = useState([])
 
   const placeOrder = (orderData) => {
-    const newOrder = {
-      id: `ORD-${Math.floor(Math.random() * 10000)}`,
+    const order = {
+      id: 'ORD-' + Math.floor(Math.random() * 9000 + 1000),
       ...orderData,
       st: 'paid',
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
     }
-    setOrders((prev) => [newOrder, ...prev])
-    return newOrder
+    setOrders(prev => [order, ...prev])
+    return order
   }
 
   const updateOrderStatus = (orderId, status) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, st: status } : o))
+    setOrders(prev =>
+      prev.map(o => o.id === orderId ? { ...o, st: status } : o)
     )
   }
 
-  const getOrderById = (orderId) => {
-    return orders.find((o) => o.id === orderId)
-  }
-
   return (
-    <OrdersContext.Provider
-      value={{
-        orders,
-        placeOrder,
-        updateOrderStatus,
-        getOrderById,
-      }}
-    >
+    <OrdersContext.Provider value={{ orders, placeOrder, updateOrderStatus }}>
       {children}
     </OrdersContext.Provider>
   )
 }
 
 export const useOrders = () => {
-  const context = useContext(OrdersContext)
-  if (!context) {
-    throw new Error('useOrders must be used within OrdersProvider')
-  }
-  return context
+  const ctx = useContext(OrdersContext)
+  if (!ctx) throw new Error('useOrders must be used within OrdersProvider')
+  return ctx
 }
