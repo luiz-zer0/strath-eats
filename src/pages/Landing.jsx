@@ -1,9 +1,21 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Pill } from '../components/common/Pill'
 import { Button } from '../components/common/Button'
+import { subscribeToStalls } from '../services/stallservive'
 
 export default function Landing() {
   const navigate = useNavigate()
+  const [showRoleChooser, setShowRoleChooser] = useState(false)
+  const [liveStallCount, setLiveStallCount] = useState(0)
+
+  useEffect(() => {
+    const unsubscribe = subscribeToStalls((stalls) => {
+      setLiveStallCount(stalls.filter((stall) => stall.online !== false).length)
+    })
+
+    return () => unsubscribe?.()
+  }, [])
 
   return (
     <div className="min-h-screen bg-navy">
@@ -100,7 +112,7 @@ export default function Landing() {
             <button onClick={() => document.getElementById('journey-sec')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm text-txt hover:text-gold transition duration-200">
               How it works
             </button>
-            <button onClick={() => navigate('/auth')} className="text-sm text-txt hover:text-gold transition duration-200">
+            <button onClick={() => setShowRoleChooser(true)} className="text-sm text-txt hover:text-gold transition duration-200">
               Sign in
             </button>
             <Button variant="primary" size="sm" onClick={() => navigate('/vendor')}>
@@ -113,7 +125,7 @@ export default function Landing() {
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-8 text-center py-20">
           <Pill>
             <span className="inline-block w-2 h-2 bg-gold rounded-full mr-1.5 animate-pulse"></span>
-            3 stalls live now
+            {liveStallCount} stalls live now
           </Pill>
 
           <h1 className="mt-12 text-6xl font-bold text-white leading-tight max-w-4xl tracking-tight">
@@ -142,7 +154,7 @@ export default function Landing() {
             </div>
             <div className="h-12 w-px bg-bd2"></div>
             <div className="text-center">
-              <p className="text-3xl font-bold text-gold">3</p>
+              <p className="text-3xl font-bold text-gold">{liveStallCount}</p>
               <p className="text-sm text-txs mt-1">Stalls live</p>
             </div>
             <div className="h-12 w-px bg-bd2"></div>
@@ -155,6 +167,23 @@ export default function Landing() {
       </div>
 
       {/* How It Works Section */}
+      {/* Role chooser modal (shown when clicking Sign in) */}
+      {showRoleChooser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowRoleChooser(false)} />
+          <div className="relative bg-navy-3 border border-bd2 rounded-lg p-8 w-full max-w-md text-center">
+            <h3 className="text-xl font-bold text-white mb-4">Sign in as</h3>
+            <p className="text-sm text-txt/80 mb-6">Choose the role that matches your account</p>
+            <div className="grid grid-cols-1 gap-3">
+              <button onClick={() => { setShowRoleChooser(false); navigate('/auth', { state: { role: 'student' } }) }} className="py-3 rounded-lg bg-gradient-to-br from-navy-4 to-navy-3 border border-bd2 text-white font-bold">Student</button>
+              <button onClick={() => { setShowRoleChooser(false); navigate('/auth', { state: { role: 'staff' } }) }} className="py-3 rounded-lg bg-gradient-to-br from-navy-4 to-navy-3 border border-bd2 text-white font-bold">Staff / Lecturer</button>
+              {/* Guest role removed from quick sign-in choices per request */}
+              <button onClick={() => { setShowRoleChooser(false); navigate('/vendor') }} className="py-3 rounded-lg bg-transparent border border-bd2 text-gold font-bold">I'm a vendor</button>
+            </div>
+            <button onClick={() => setShowRoleChooser(false)} className="mt-6 text-sm text-txt/70">Cancel</button>
+          </div>
+        </div>
+      )}
       <div id="journey-sec" className="py-24 px-8 bg-navy-2 border-t border-bd">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-20">
@@ -300,12 +329,7 @@ export default function Landing() {
             </div>
           </div>
           <p className="mb-6">© 2026 StrathEats. Making campus food simple, fast, and delicious.</p>
-          <button
-            onClick={() => navigate('/admin')}
-            className="text-txs hover:text-gold transition"
-          >
-            Admin access
-          </button>
+          {/* Admin access intentionally hidden from footer to avoid public exposure. Use direct /admin route when needed. */}
         </div>
       </footer>
     </div>

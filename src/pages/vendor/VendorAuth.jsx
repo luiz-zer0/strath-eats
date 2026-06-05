@@ -6,7 +6,7 @@ import { Button } from '../../components/common/Button'
 
 export default function VendorAuth() {
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { login, register } = useAuth()
   const { addToast } = useToast()
 
   const [isSignUp, setIsSignUp] = useState(false)
@@ -36,9 +36,40 @@ export default function VendorAuth() {
       return
     }
 
-    login({ email: formData.email, stallName: formData.stallName }, 'vendor')
-    addToast('Welcome to vendor dashboard!', 'success')
-    navigate('/vendor/dashboard')
+    if (isSignUp) {
+      register(
+        {
+          firstName: formData.stallName,
+          lastName: 'Vendor',
+          email: formData.email,
+          password: formData.password,
+          stallName: formData.stallName,
+        },
+        'vendor'
+      )
+        .then(() => {
+          addToast('Verification email sent. Please verify before signing in.', 'success')
+          navigate('/verify-email', { state: { email: formData.email, role: 'vendor' } })
+        })
+        .catch((err) => {
+          addToast(err?.message || 'Could not open stall', 'error')
+        })
+      return
+    }
+
+    login(formData.email, formData.password, 'vendor')
+      .then(() => {
+        addToast('Welcome to vendor dashboard!', 'success')
+        navigate('/vendor/dashboard')
+      })
+      .catch((err) => {
+        if (err?.code === 'auth/email-not-verified') {
+          addToast('Please verify your email before signing in', 'error')
+          navigate('/verify-email', { state: { email: formData.email, role: 'vendor' } })
+          return
+        }
+        addToast(err?.message || 'Unable to sign in', 'error')
+      })
   }
 
   return (
@@ -115,8 +146,8 @@ export default function VendorAuth() {
 
           <p className="text-11px text-txtd text-center mt-6">
             {isSignUp
-              ? 'Already a vendor? '
-              : "Don't have a stall yet? "}
+              ? 'Already opened a stall? '
+              : "Need to open a stall first? "}
             <button
               onClick={() => setIsSignUp(!isSignUp)}
               className="text-gold hover:text-gold-2"

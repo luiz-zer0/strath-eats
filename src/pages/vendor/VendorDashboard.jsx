@@ -1,8 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { stallsDB, mockVendorOrders } from '../../data/mockData'
 import { formatCurrency } from '../../utils/formatters'
+import { getStall } from '../../services/stallservive'
+import { subscribeToVendorOrders } from '../../services/orderservice'
+import { db } from '../../services/firebase'
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
@@ -148,30 +151,79 @@ export default function VendorDashboard() {
   const { toasts, add: addToast } = useToastLocal()
 
   const [tab, setTab]           = useState('orders')
-  const [orders, setOrders]     = useState(mockVendorOrders)
-  const [stall, setStall]       = useState(stallsDB[0])
-  const [menuItems, setMenuItems] = useState(stall.menu)
+  const [orders, setOrders]     = useState([])
+  const [stall, setStall]       = useState(null)
+  const [menuItems, setMenuItems] = useState([])
   const [newItem, setNewItem]   = useState({ nm: '', pr: '', cat: '', halfPr: '', fullPr: '', hasPortions: false })
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [savedAt, setSavedAt]   = useState(null)
   const [stallOnline, setStallOnline] = useState(true)
+  const [stallId, setStallId] = useState(null)
+  const [loadingStall, setLoadingStall] = useState(true)
+  const [firestoreError, setFirestoreError] = useState(null)
 
   const [stallSettings, setStallSettings] = useState({
-    name:       stall.name,
-    cat:        stall.cat,
-    emoji:      stall.emoji,
+    name:       '',
+    cat:        '',
+    emoji:      '🍽️',
     openTime:   '08:00',
     closeTime:  '16:00',
     desc:       'Home-style Kenyan meals made fresh daily.',
     mpesa:      user?.mpesa || '522522',
   })
 
-  if (!isLoggedIn) {
-    navigate('/vendor')
-    return null
+  useEffect(() => {
+    if (!user) return
+
+    let active = true
+    const resolvedStallId = user.stallId || user.uid
+    setStallId(resolvedStallId)
+    setLoadingStall(true)
+
+    getStall(resolvedStallId)
+      .then((stallDoc) => {
+        if (!active) return
+        if (stallDoc) {
+          setStall(stallDoc)
+          setMenuItems(Array.isArray(stallDoc.menu) ? stallDoc.menu : [])
+          setStallOnline(Boolean(stallDoc.online ?? true))
+          setStallSettings({
+            name: stallDoc.name || '',
+            cat: stallDoc.cat || '',
+            emoji: stallDoc.emoji || '🍽️',
+            openTime: String(stallDoc.hrs || '08:00–16:00').split('–')[0] || '08:00',
+            closeTime: String(stallDoc.hrs || '08:00–16:00').split('–')[1] || '16:00',
+            desc: stallDoc.desc || 'Home-style Kenyan meals made fresh daily.',
+            mpesa: stallDoc.mpesa || user?.mpesa || '522522',
+          })
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setLoadingStall(false)
+      })
+
+    const unsubscribeOrders = subscribeToVendorOrders(resolvedStallId, (liveOrders) => {
+      if (!active) return
+      setOrders(liveOrders || [])
+    }, (err) => {
+      if (!active) return
+      console.error('Vendor orders listener error', err)
+      setFirestoreError(err?.message || String(err))
+    })
+
+    return () => {
+      active = false
+      unsubscribeOrders?.()
+    }
+  }, [user])
+
+  const persistStall = async (patch) => {
+    if (!stallId) return
+    await setDoc(doc(db, 'stalls', stallId), { ...patch, updatedAt: serverTimestamp() }, { merge: true })
   }
 
-  // ── Computed ──
+  // ── Computed (hooks must run before any conditional returns) ──
   const pendingCount = orders.filter(o => o.st === 'paid').length
 
   const categoryOptions = useMemo(() => {
@@ -204,6 +256,27 @@ export default function VendorDashboard() {
     return Array.from(map.entries()).map(([name,sales])=>({name,sales})).sort((a,b)=>b.sales-a.sales).slice(0,5)
   }, [orders])
 
+  if (!isLoggedIn) {
+    navigate('/vendor')
+    return null
+  }
+
+  if (loadingStall) {
+    return (
+      <div style={{ minHeight:'100vh', background:'#0a0f1e', display:'flex', alignItems:'center', justifyContent:'center', color:'#94a3b8', fontFamily:'Sora, system-ui, sans-serif' }}>
+        {firestoreError ? (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 18, color: '#f87171', marginBottom: 8 }}>Firestore error</div>
+            <div style={{ color: '#94a3b8' }}>{firestoreError}</div>
+            <div style={{ marginTop: 12, color: '#64748b', fontSize: 12 }}>Check Firestore rules and ensure your account has read access to your stall and orders.</div>
+          </div>
+        ) : (
+          'Loading your stall...'
+        )}
+      </div>
+    )
+  }
+
   // ── Handlers ──
   const handleConfirm  = id => { setOrders(p => p.map(o => o.id===id ? {...o, st:'accepted', rm:true} : o)); addToast('Order confirmed ✅','success') }
   const handleReject   = id => { setOrders(p => p.filter(o => o.id!==id)); addToast('Order rejected','error') }
@@ -227,13 +300,17 @@ export default function VendorDashboard() {
       pr: newItem.hasPortions ? Number(newItem.fullPr) : pr,
       portions: newItem.hasPortions ? { half: Number(newItem.halfPr), full: Number(newItem.fullPr) } : null,
     }
-    setMenuItems(p=>[...p,item])
+    const nextMenu = [...menuItems, item]
+    setMenuItems(nextMenu)
+    persistStall({ menu: nextMenu, name: stallSettings.name, cat: stallSettings.cat, emoji: stallSettings.emoji, hrs: `${stallSettings.openTime}–${stallSettings.closeTime}`, desc: stallSettings.desc, mpesa: stallSettings.mpesa, online: stallOnline })
     setNewItem({ nm:'', pr:'', cat:'', halfPr:'', fullPr:'', hasPortions: false })
     addToast(`${item.nm} added to menu ✅`,'success')
   }
 
   const handleSaveSettings = () => {
-    setStall(p => ({ ...p, ...stallSettings, hrs: `${stallSettings.openTime}–${stallSettings.closeTime}` }))
+    const nextStall = { ...stall, ...stallSettings, hrs: `${stallSettings.openTime}–${stallSettings.closeTime}`, online: stallOnline, menu: menuItems }
+    setStall(nextStall)
+    persistStall(nextStall)
     setSavedAt(new Date().toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'}))
     addToast('Settings saved ✅','success')
   }
@@ -264,7 +341,21 @@ export default function VendorDashboard() {
         <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>Orders Queue</h1>
         <div style={{ display:'flex', alignItems:'center', gap: 10 }}>
           <span style={{ fontSize: 11, color: '#64748b' }}>Stall status:</span>
-          <Toggle on={stallOnline} onToggle={() => { setStallOnline(p=>!p); addToast(stallOnline ? 'Stall set to Closed' : 'Stall is now Open 🟢', 'info') }} />
+          <Toggle on={stallOnline} onToggle={() => {
+            const nextOnline = !stallOnline
+            setStallOnline(nextOnline)
+            persistStall({
+              menu: menuItems,
+              name: stallSettings.name,
+              cat: stallSettings.cat,
+              emoji: stallSettings.emoji,
+              hrs: `${stallSettings.openTime}–${stallSettings.closeTime}`,
+              desc: stallSettings.desc,
+              mpesa: stallSettings.mpesa,
+              online: nextOnline,
+            })
+            addToast(nextOnline ? 'Stall is now Open 🟢' : 'Stall set to Closed', 'info')
+          }} />
           <span style={{ fontSize: 11, fontWeight: 700, color: stallOnline ? '#4ade80' : '#f87171' }}>
             {stallOnline ? 'Open' : 'Closed'}
           </span>
@@ -364,10 +455,37 @@ export default function VendorDashboard() {
                   <span style={{ fontSize: 10, color: item.av ? '#4ade80' : '#f87171', fontWeight: 600 }}>
                     {item.av ? 'Available' : 'Out'}
                   </span>
-                  <Toggle on={item.av} onToggle={() => setMenuItems(p => p.map(i => i.id===item.id ? {...i, av:!i.av} : i))} />
+                  <Toggle on={item.av} onToggle={() => {
+                    const nextMenu = menuItems.map(i => i.id===item.id ? {...i, av:!i.av} : i)
+                    setMenuItems(nextMenu)
+                    persistStall({
+                      menu: nextMenu,
+                      name: stallSettings.name,
+                      cat: stallSettings.cat,
+                      emoji: stallSettings.emoji,
+                      hrs: `${stallSettings.openTime}–${stallSettings.closeTime}`,
+                      desc: stallSettings.desc,
+                      mpesa: stallSettings.mpesa,
+                      online: stallOnline,
+                    })
+                  }} />
                 </div>
                 <button
-                  onClick={() => { setMenuItems(p=>p.filter(i=>i.id!==item.id)); addToast('Item removed','info') }}
+                  onClick={() => {
+                    const nextMenu = menuItems.filter(i=>i.id!==item.id)
+                    setMenuItems(nextMenu)
+                    persistStall({
+                      menu: nextMenu,
+                      name: stallSettings.name,
+                      cat: stallSettings.cat,
+                      emoji: stallSettings.emoji,
+                      hrs: `${stallSettings.openTime}–${stallSettings.closeTime}`,
+                      desc: stallSettings.desc,
+                      mpesa: stallSettings.mpesa,
+                      online: stallOnline,
+                    })
+                    addToast('Item removed','info')
+                  }}
                   style={{ width:28, height:28, borderRadius:'50%', border:'none', cursor:'pointer', background:'rgba(248,113,113,0.12)', color:'#f87171', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.13s' }}
                   onMouseEnter={e=>e.currentTarget.style.background='rgba(248,113,113,0.25)'}
                   onMouseLeave={e=>e.currentTarget.style.background='rgba(248,113,113,0.12)'}
@@ -530,7 +648,20 @@ export default function VendorDashboard() {
               <span style={{ fontSize:11, fontWeight:700, color: stallOnline ? '#4ade80' : '#f87171' }}>
                 {stallOnline ? '🟢 Open' : '🔴 Closed'}
               </span>
-              <Toggle on={stallOnline} onToggle={()=>setStallOnline(p=>!p)} />
+              <Toggle on={stallOnline} onToggle={() => {
+                const nextOnline = !stallOnline
+                setStallOnline(nextOnline)
+                persistStall({
+                  menu: menuItems,
+                  name: stallSettings.name,
+                  cat: stallSettings.cat,
+                  emoji: stallSettings.emoji,
+                  hrs: `${stallSettings.openTime}–${stallSettings.closeTime}`,
+                  desc: stallSettings.desc,
+                  mpesa: stallSettings.mpesa,
+                  online: nextOnline,
+                })
+              }} />
             </div>
           </div>
 
