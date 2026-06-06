@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { stallsDB, mockVendorOrders } from '../../data/mockData'
@@ -166,10 +166,12 @@ export default function VendorDashboard() {
     mpesa:      user?.mpesa || '522522',
   })
 
-  if (!isLoggedIn) {
-    navigate('/vendor')
-    return null
-  }
+  const [stallSettings, setStallSettings] = useState({...})
+ 
+  // Redirect if not logged in — must be after all hooks
+  useEffect(() => {
+    if (!isLoggedIn) navigate('/vendor')
+  }, [isLoggedIn, navigate])
 
   // ── Computed ──
   const pendingCount = orders.filter(o => o.st === 'paid').length
@@ -203,6 +205,9 @@ export default function VendorDashboard() {
     }))
     return Array.from(map.entries()).map(([name,sales])=>({name,sales})).sort((a,b)=>b.sales-a.sales).slice(0,5)
   }, [orders])
+
+  // Don't render anything while redirecting
+if (!isLoggedIn) return null
 
   // ── Handlers ──
   const handleConfirm  = id => { setOrders(p => p.map(o => o.id===id ? {...o, st:'accepted', rm:true} : o)); addToast('Order confirmed ✅','success') }
