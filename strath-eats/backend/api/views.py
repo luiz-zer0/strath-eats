@@ -110,8 +110,6 @@ def trigger_stk_push(request):
     except Exception as e:
         return Response({"error": str(e)}, status=500)
 
-# Example debug in views.py
-print("Response from Safaricom:", response.text)
 
 
 
