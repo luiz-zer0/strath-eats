@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { adminStats, allOrders, stallsDB } from '../../data/mockData'
+import { adminStats, allOrders } from '../../data/mockData'
+import { subscribeToStalls } from '../../services/stallservive'
 import { formatCurrency } from '../../utils/formatters'
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, XAxis, YAxis,
@@ -151,23 +152,32 @@ export default function AdminDashboard() {
   const { isLoggedIn, logout, user } = useAuth()
   const { toasts, add: addToast } = useToast()
 
-  const [tab, setTab]           = useState('overview')
+    const [tab, setTab]           = useState('overview')
+    const [stalls, setStalls] = useState([])
+
+    useEffect(() => {
+      const unsub = subscribeToStalls((docs) => {
+        setStalls(docs)
+      })
+      return () => unsub?.()
+    }, [])
   const [period, setPeriod]     = useState('week')
   const [search, setSearch]     = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [stallStatuses, setStallStatuses] = useState(
-    Object.fromEntries(stallsDB.map(s => [s.id, 'active']))
+    Object.fromEntries(stalls.map(s => [s.id, 'active']))
   )
 
   if (!isLoggedIn) { navigate('/admin'); return null }
 
   // ── Scaled KPIs ──
   const m = PERIOD_MULTIPLIERS[period]
+  const activeStallsCount = stalls.filter(s => s.online !== false).length
   const kpis = [
     { icon: '📋', label: 'Total Orders',   value: Math.round(adminStats.totalOrders * m),                  raw: Math.round(adminStats.totalOrders * m),   trend: '+12%', color: '#60a5fa',  border: '#2563eb' },
     { icon: '💰', label: 'Total Revenue',  value: formatCurrency(Math.round(adminStats.totalRevenue * m)), raw: null,                                       trend: '+8%',  color: '#f0b429',  border: '#f0b429' },
     { icon: '👥', label: 'Active Users',   value: adminStats.activeUsers,                                  raw: adminStats.activeUsers,                    trend: '+5%',  color: '#4ade80',  border: '#16a34a' },
-    { icon: '🏪', label: 'Active Stalls',  value: adminStats.activeStalls,                                 raw: adminStats.activeStalls,                   trend: '—',    color: '#a78bfa',  border: '#7c3aed' },
+    { icon: '🏪', label: 'Active Stalls',  value: activeStallsCount,                                 raw: activeStallsCount,                   trend: '—',    color: '#a78bfa',  border: '#7c3aed' },
   ]
 
   // ── Filtered orders ──
@@ -389,11 +399,11 @@ export default function AdminDashboard() {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>All Stalls</h1>
-        <span style={{ fontSize: 11, color: '#64748b' }}>{stallsDB.length} registered stalls</span>
+        <span style={{ fontSize: 11, color: '#64748b' }}>{stalls.length} registered stalls</span>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {stallsDB.map(stall => {
+        {stalls.map(stall => {
           const status = stallStatuses[stall.id] || 'active'
           const isActive = status === 'active'
           return (

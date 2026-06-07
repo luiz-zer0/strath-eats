@@ -79,7 +79,7 @@ function Input({ label, ...props }) {
 export default function Auth() {
   const location = useLocation()
   const navigate  = useNavigate()
-  const { login } = useAuth()
+  const { login, register } = useAuth()
   const { toasts, add: addToast } = useToast()
 
   const role   = location.state?.role || 'student'
@@ -101,19 +101,20 @@ export default function Auth() {
   const validate = () => {
     if (!form.email)    { addToast('Email is required', 'error');    return false }
     if (!form.password) { addToast('Password is required', 'error'); return false }
+    if (!form.email.toLowerCase().endsWith('@strathmore.edu')) {
+      addToast('Only @strathmore.edu accounts can use StrathEats', 'error')
+      return false
+    }
     if (isSignUp) {
       if (!form.firstName) { addToast('First name is required', 'error'); return false }
       if (!form.lastName)  { addToast('Last name is required', 'error');  return false }
-      if (!form.email.endsWith('@strathmore.edu') && role !== 'other') {
-        addToast('Please use your @strathmore.edu email', 'error'); return false
-      }
       if (form.password !== form.confirm) { addToast('Passwords do not match', 'error'); return false }
       if (form.password.length < 6)       { addToast('Password must be at least 6 characters', 'error'); return false }
     }
     return true
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validate()) return
 
@@ -121,15 +122,39 @@ export default function Auth() {
       firstName: form.firstName || form.email.split('@')[0],
       lastName:  form.lastName  || '',
       email:     form.email,
+      password:  form.password,
       mpesa:     form.mpesa     || '',
       studentId: role === 'student' ? form.id : '',
       staffId:   role === 'staff'   ? form.id : '',
       id:        form.id || '',
     }
 
-    login(userData, role)
-    addToast(`Welcome${form.firstName ? ', ' + form.firstName : ' back'}! 🎉`, 'success')
-    navigate('/dashboard')
+    try {
+      if (isSignUp) {
+        await register(userData, role)
+        addToast(`Verification email sent to ${form.email}. Please verify before signing in.`, 'success')
+        setIsSignUp(false)
+        setForm(p => ({ ...p, password: '', confirm: '' }))
+        navigate('/verify-email', { state: { email: form.email, role } })
+      } else {
+        await login(form.email, form.password, role)
+        addToast('Welcome back!', 'success')
+        navigate('/dashboard')
+      }
+    } catch (err) {
+      const msg = err?.code === 'auth/user-not-found' ? 'No account found with this email'
+        : err?.code === 'auth/wrong-password' ? 'Incorrect password'
+        : err?.code === 'auth/email-already-in-use' ? 'An account with this email already exists'
+        : err?.code === 'auth/email-not-verified' ? 'Please verify your email before signing in'
+        : err?.code === 'auth/invalid-email-domain' ? 'Only @strathmore.edu accounts can use StrathEats'
+        : err?.code === 'auth/invalid-email' ? 'Invalid email address'
+        : err?.message || 'Something went wrong'
+      addToast(msg, 'error')
+
+      if (err?.code === 'auth/email-not-verified') {
+        navigate('/verify-email', { state: { email: form.email, role } })
+      }
+    }
   }
 
   return (

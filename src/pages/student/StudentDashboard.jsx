@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
 import { useOrders } from '../../context/OrdersContext'
-import { stallsDB } from '../../data/mockData'
+// live stalls come from Firestore subscription
+import { subscribeToStalls } from '../../services/stallservive'
 import { formatCurrency, formatDate } from '../../utils/formatters'
 import { downloadReceipt } from '../../utils/receipt'
 
@@ -509,6 +510,14 @@ export default function StudentDashboard() {
   } = useCart()
   const { orders, placeOrder, updateOrderStatus } = useOrders()
   const { toasts, add: addToast } = useToastLocal()
+  const [stalls, setStalls] = useState([])
+
+  useEffect(() => {
+    const unsub = subscribeToStalls((docs) => {
+      setStalls(docs.filter(s => s.online !== false))
+    })
+    return () => unsub?.()
+  }, [])
 
   const [tab, setTab] = useState('order')
   const [selectedStallObj, setSelectedStallObj] = useState(null)
@@ -577,14 +586,13 @@ export default function StudentDashboard() {
         <h1 style={{ fontSize: 24, fontWeight: 700, color: '#fff', marginBottom: 20, letterSpacing: '-0.02em' }}>
           Order Food
         </h1>
-
         {!selectedStallObj ? (
           <>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
-              {stallsDB.length} stalls open
+              {stalls.length} stalls open
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
-              {stallsDB.map(stall => (
+              {stalls.map(stall => (
                 <div
                   key={stall.id}
                   onClick={() => handleSelectStall(stall)}
@@ -681,7 +689,7 @@ export default function StudentDashboard() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {orders.map(order => {
             const status = STATUS[order.st] || STATUS.paid
-            const stall = stallsDB.find(s => s.id === order.stallId)
+            const stall = stalls.find(s => s.id === order.stallId)
             return (
               <div
                 key={order.id}

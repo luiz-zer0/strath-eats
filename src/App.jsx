@@ -7,6 +7,7 @@ import { ToastProvider } from './components/common/Toast'
 import Landing from './pages/Landing'
 import OrderRoleSelect from './pages/OrderRoleSelect'
 import Auth from './pages/Auth'
+import VerifyEmail from './pages/VerifyEmail'
 import StudentDashboard from './pages/student/StudentDashboard'
 import VendorAuth from './pages/vendor/VendorAuth'
 import VendorDashboard from './pages/vendor/VendorDashboard'
@@ -24,6 +25,7 @@ function App() {
                 <Route path="/" element={<Landing />} />
                 <Route path="/order" element={<OrderRoleSelect />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/verify-email" element={<VerifyEmail />} />
                 <Route path="/dashboard" element={<StudentDashboard />} />
                 <Route path="/vendor" element={<VendorAuth />} />
                 <Route path="/vendor/dashboard" element={<VendorDashboard />} />
