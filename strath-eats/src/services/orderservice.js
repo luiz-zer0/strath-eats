@@ -67,3 +67,23 @@ export function subscribeToAllOrders(callback) {
     callback(orders)
   })
 }
+
+// ── Trigger M-Pesa STK Push (Django Backend) ─────────────────────
+export async function triggerMpesaStkPush(orderData) {
+  // Use your permanent Render URL here
+  const BACKEND_URL = "https://strath-eats.onrender.com"; 
+
+  const response = await fetch(`${BACKEND_URL}/api/stk-push/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(orderData),
+  });
+
+  if (!response.ok) {
+    throw new Error('Could not reach payment server');
+  }
+
+  return await response.json();
+}

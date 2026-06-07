@@ -7,6 +7,7 @@ import { useOrders } from '../../context/OrdersContext'
 import { subscribeToStalls } from '../../services/stallService'
 import { formatCurrency, formatDate } from '../../utils/formatters'
 import { downloadReceipt } from '../../utils/receipt'
+import { triggerMpesaStkPush } from '../../services/orderservice'
 
 //  Status config 
 const STATUS = {
@@ -548,26 +549,11 @@ export default function StudentDashboard() {
     addToast('STK Push sent to ' + (user?.mpesa || 'your phone') + '...', 'info')
 
     try {
-      // 1. Send request to your Django Backend
-      const response = await fetch('https://lyricist-composed-cesspool.ngrok-free.dev/stk-push/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone: user.mpesa, // Uses the phone stored in their profile
-          amount: getTotal(),
-          order_id: selectedStallObj.id // Or your generated order database ID
-        }),
+      await triggerMpesaStkPush({
+        phone: user.mpesa,
+        amount: getTotal(),
+        order_id: selectedStallObj.id
       })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        addToast('Check your phone for the M-Pesa PIN prompt!', 'success')
-        // The callback from Django/Safaricom will now automatically 
-        // update the Firestore status to 'paid' in the background!
-      } else {
-        addToast('Payment failed: ' + data.error, 'error')
-      }
     } catch (error) {
       console.error('Checkout failed', error)
       addToast('Could not reach payment server.', 'error')
