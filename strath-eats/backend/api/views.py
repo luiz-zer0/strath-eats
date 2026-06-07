@@ -90,7 +90,7 @@ def trigger_stk_push(request):
         "PartyA": phone,
         "PartyB": SHORTCODE,
         "PhoneNumber": phone,
-        "CallBackURL": " https://lyricist-composed-cesspool.ngrok-free.dev/mpesa-callback/", 
+        "CallBackURL": " https://strath-eats.onrender.com/api/mpesa-callback/", 
         "AccountReference": "StrathEats",
         "TransactionDesc": f"Payment for order {order_id}"
     }
