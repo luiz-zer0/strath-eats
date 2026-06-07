@@ -77,11 +77,13 @@ export async function triggerMpesaStkPush(orderData) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
     },
     body: JSON.stringify(orderData),
   });
 
   if (!response.ok) {
+    const errorData = await response.json();
     throw new Error('Could not reach payment server');
   }
 
