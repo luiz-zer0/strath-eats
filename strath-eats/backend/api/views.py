@@ -55,7 +55,12 @@ def get_mpesa_access_token():
     """Authenticates with Safaricom and gets a temporary access token."""
     api_url = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
     r = requests.get(api_url, auth=(CONSUMER_KEY, CONSUMER_SECRET))
+
+    if r.status_code != 200:
+        print(f"DEBUG: Token request failed with {r.status_code}: {r.text}")
+
     return r.json()['access_token']
+    
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -98,17 +103,27 @@ def trigger_stk_push(request):
     try:
         response = requests.post(api_url, json=payload, headers=headers)
         response_data = response.json()
-        
+
+        print("DEBUG - Keys received from Safaricom:", list(response_data.keys()))
+        print("DEBUG - Full Response Object:", response_data)
         
         checkout_request_id = response_data.get('CheckoutRequestID')
-        
-        return Response({
-            "message": "STK Push sent!", 
-            "checkout_request_id": checkout_request_id
-        })
+        if checkout_request_id:
+            return Response({"message": "STK Push sent!", "checkout_request_id": checkout_request_id})
+        else:
+            return Response({"error": "ID missing", "raw_response": response_data}, status=400)
         
     except Exception as e:
         return Response({"error": str(e)}, status=500)
+        
+    # except Exception as e:
+    #     return Response({"error": str(e)}, status=500)
+    #     return Response({
+    #         "message": "STK Push sent!", 
+    #         "checkout_request_id": checkout_request_id
+    #     })
+        
+
 
 
 
