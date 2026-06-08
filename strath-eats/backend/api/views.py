@@ -95,7 +95,7 @@ def trigger_stk_push(request):
         "PartyA": phone,
         "PartyB": SHORTCODE,
         "PhoneNumber": phone,
-        "CallBackURL": " https://strath-eats.onrender.com/api/mpesa-callback/", 
+        "CallBackURL": "https://strath-eats.onrender.com/api/mpesa-callback/", 
         "AccountReference": "StrathEats",
         "TransactionDesc": f"Payment for order {order_id}"
     }
