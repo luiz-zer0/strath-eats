@@ -23,7 +23,10 @@ const COLORS = ['#f0b429', '#f7c948', '#fde68a', '#fb923c', '#a78bfa']
 const STATUS_CFG = {
   paid:     { label: 'Payment Confirmed', color: '#fb923c', bg: 'rgba(251,146,60,0.12)'  },
   accepted: { label: 'Confirmed',         color: '#f0b429', bg: 'rgba(240,180,41,0.12)'  },
+  preparing:{ label: 'Preparing',         color: '#60a5fa', bg: 'rgba(96,165,250,0.12)'  },
   ready:    { label: 'Ready',             color: '#4ade80', bg: 'rgba(74,222,128,0.12)'  },
+  collected:{ label: 'Collected',         color: '#94a3b8', bg: 'rgba(148,163,184,0.10)' },
+  cancelled:{ label: 'Cancelled',         color: '#f87171', bg: 'rgba(248,113,113,0.10)' },
 }
 
 //  Toast hook
@@ -47,7 +50,7 @@ const NAV = [
   { key: 'settings',  label: 'Settings' },
 ]
 
-function Sidebar({ tab, setTab, user, pendingCount, onSignOut }) {
+function Sidebar({ tab, setTab, user, pendingCount, onSignOut, sidebarOpen }) {
   const initials = user
     ? `${(user.firstName || user.name || 'V')[0]}${(user.lastName || '')[0] || ''}`.toUpperCase()
     : 'V'
@@ -56,7 +59,7 @@ function Sidebar({ tab, setTab, user, pendingCount, onSignOut }) {
     : 'Vendor'
 
   return (
-    <div className="dash-sidebar" style={{ width: 200 }}>
+    <div className={`dash-sidebar${sidebarOpen ? ' open' : ''}`} style={{ width: 200 }}>
       <div className="dash-logo-area">
         <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>
           Strath<em style={{ color: '#f0b429', fontStyle: 'normal' }}>Eats</em>
@@ -303,7 +306,8 @@ export default function VendorDashboard() {
   //  Handlers 
 
   const handleConfirm  = async id => { setOrders(p => p.map(o => o.id===id ? {...o, st:'accepted', rm:true} : o)); await updateOrderStatus(id, 'accepted'); addToast('Order confirmed','success') }
-  const handleReject   = async id => { setOrders(p => p.map(o => o.id===id ? {...o, st:'rejected'} : o)); await updateOrderStatus(id, 'rejected'); addToast('Order rejected','error') }
+  const handleReject   = async id => { setOrders(p => p.map(o => o.id===id ? {...o, st:'cancelled'} : o)); await updateOrderStatus(id, 'cancelled'); addToast('Order cancelled','error') }
+  const handlePreparing= async id => { setOrders(p => p.map(o => o.id===id ? {...o, st:'preparing'} : o)); await updateOrderStatus(id, 'preparing'); addToast('Marked as preparing','info') }
   const handleReady    = async id => { setOrders(p => p.map(o => o.id===id ? {...o, st:'ready', rm:false} : o)); await updateOrderStatus(id, 'ready'); addToast('Marked as ready','success') }
   const handleCollected= async id => { setOrders(p => p.map(o => o.id===id ? {...o, st:'collected'} : o)); await updateOrderStatus(id, 'collected'); addToast('Order collected','info') }
 
@@ -437,7 +441,7 @@ export default function VendorDashboard() {
                   <span>Pickup {order.pu}</span>
                 </div>
 
-                <div style={{ display:'flex', gap: 8 }}>
+                <div style={{ display:'flex', gap: 8, flexWrap:'wrap' }}>
                   {order.st === 'paid' && <>
                     <button onClick={() => handleConfirm(order.id)} style={{ padding:'7px 16px', borderRadius: 8, border:'none', cursor:'pointer', background:'rgba(74,222,128,0.15)', color:'#4ade80', fontFamily:'Sora,system-ui,sans-serif', fontSize:11, fontWeight:700, transition:'all 0.13s' }}
                       onMouseEnter={e=>e.currentTarget.style.background='rgba(74,222,128,0.25)'}
@@ -446,9 +450,15 @@ export default function VendorDashboard() {
                     <button onClick={() => handleReject(order.id)} style={{ padding:'7px 16px', borderRadius: 8, border:'none', cursor:'pointer', background:'rgba(248,113,113,0.15)', color:'#f87171', fontFamily:'Sora,system-ui,sans-serif', fontSize:11, fontWeight:700, transition:'all 0.13s' }}
                       onMouseEnter={e=>e.currentTarget.style.background='rgba(248,113,113,0.25)'}
                       onMouseLeave={e=>e.currentTarget.style.background='rgba(248,113,113,0.15)'}
-                    > Reject</button>
+                    > Cancel</button>
                   </>}
                   {order.st === 'accepted' && order.rm && (
+                    <button onClick={() => handlePreparing(order.id)} style={{ padding:'7px 16px', borderRadius: 8, border:'none', cursor:'pointer', background:'rgba(96,165,250,0.15)', color:'#60a5fa', fontFamily:'Sora,system-ui,sans-serif', fontSize:11, fontWeight:700, transition:'all 0.13s' }}
+                      onMouseEnter={e=>e.currentTarget.style.background='rgba(96,165,250,0.25)'}
+                      onMouseLeave={e=>e.currentTarget.style.background='rgba(96,165,250,0.15)'}
+                    > Prepare</button>
+                  )}
+                  {order.st === 'preparing' && (
                     <button onClick={() => handleReady(order.id)} style={{ padding:'7px 16px', borderRadius: 8, border:'none', cursor:'pointer', background:'rgba(240,180,41,0.15)', color:'#f0b429', fontFamily:'Sora,system-ui,sans-serif', fontSize:11, fontWeight:700, transition:'all 0.13s' }}
                       onMouseEnter={e=>e.currentTarget.style.background='rgba(240,180,41,0.25)'}
                       onMouseLeave={e=>e.currentTarget.style.background='rgba(240,180,41,0.15)'}
@@ -471,7 +481,7 @@ export default function VendorDashboard() {
   const renderMenu = () => (
     <div>
       <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 20, letterSpacing:'-0.02em' }}>My Menu</h1>
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 280px', gap: 20, alignItems:'start' }}>
+      <div className="vendor-menu-grid" style={{ display:'grid', gridTemplateColumns:'1fr 280px', gap: 20, alignItems:'start' }}>
         {/* Items list */}
         <div style={{ display:'flex', flexDirection:'column', gap: 8 }}>
           {menuItems.map(item => (
@@ -588,7 +598,7 @@ export default function VendorDashboard() {
     <div>
       <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 20, letterSpacing:'-0.02em' }}>Analytics</h1>
       {/* KPI row */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap: 12, marginBottom: 20 }}>
+      <div className="vendor-kpi-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap: 12, marginBottom: 20 }}>
         {[
           { 
     label: "Today's Revenue", 
@@ -680,7 +690,7 @@ export default function VendorDashboard() {
       {savedAt && <div style={{ fontSize:11, color:'#4ade80', marginBottom: 16 }}> Last saved today at {savedAt}</div>}
       {!savedAt && <div style={{ fontSize:11, color:'#475569', marginBottom: 16 }}>Configure how your stall appears to students</div>}
 
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 300px', gap: 20, alignItems:'start' }}>
+      <div className="vendor-settings-grid" style={{ display:'grid', gridTemplateColumns:'1fr 300px', gap: 20, alignItems:'start' }}>
         {/* Form */}
         <div style={{ display:'flex', flexDirection:'column', gap: 14 }}>
 
@@ -811,11 +821,17 @@ export default function VendorDashboard() {
     </div>
   )
 
-  return (
-    <div style={{ minHeight:'100vh', background:'#0a0f1e', display:'flex', fontFamily:'Sora, system-ui, sans-serif' }}>
-      <Sidebar tab={tab} setTab={setTab} user={user} pendingCount={pendingCount} onSignOut={()=>{ logout(); navigate('/') }} />
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
-      <div className="dash-main">
+  return (
+    <div className="dash-root">
+      <button className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+        {sidebarOpen ? '✕' : '☰'}
+      </button>
+      <Sidebar tab={tab} setTab={setTab} user={user} pendingCount={pendingCount} onSignOut={()=>{ logout(); navigate('/') }} sidebarOpen={sidebarOpen} />
+      {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+
+      <div className="dash-main" onClick={() => sidebarOpen && setSidebarOpen(false)}>
         {tab==='orders'    && renderOrders()}
         {tab==='menu'      && renderMenu()}
         {tab==='analytics' && renderAnalytics()}

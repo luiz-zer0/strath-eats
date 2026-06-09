@@ -16,10 +16,12 @@ const STATUS = {
   pending:   { label: 'Pending Payment', color: '#f87171', bg: 'rgba(248,113,113,0.12)', step: -1 },
   paid:      { label: 'Paid',      color: '#fb923c', bg: 'rgba(251,146,60,0.12)',  step: 0 },
   accepted:  { label: 'Confirmed', color: '#f0b429', bg: 'rgba(240,180,41,0.12)',  step: 1 },
-  ready:     { label: 'Ready!',    color: '#4ade80', bg: 'rgba(74,222,128,0.12)',  step: 2 },
-  collected: { label: 'Collected', color: '#94a3b8', bg: 'rgba(148,163,184,0.10)', step: 3 },
+  preparing: { label: 'Preparing', color: '#60a5fa', bg: 'rgba(96,165,250,0.12)',  step: 2 },
+  ready:     { label: 'Ready!',    color: '#4ade80', bg: 'rgba(74,222,128,0.12)',  step: 3 },
+  collected: { label: 'Collected', color: '#94a3b8', bg: 'rgba(148,163,184,0.10)', step: 4 },
+  cancelled: { label: 'Cancelled', color: '#f87171', bg: 'rgba(248,113,113,0.10)', step: -1 },
 }
-const STEPS = ['Paid', 'Confirmed', 'Ready', 'Collected']
+const STEPS = ['Paid', 'Confirmed', 'Preparing', 'Ready', 'Collected']
 
 //  Tiny toast stack 
 import { useState as useS } from 'react'
@@ -179,7 +181,7 @@ function UserProfile({ user, role }) {
 }
 
 //  Sidebar 
-function Sidebar({ tab, setTab, orders, user, role, onSignOut }) {
+function Sidebar({ tab, setTab, orders, user, role, onSignOut, sidebarOpen, onToggleSidebar }) {
   const pendingCount = orders.filter(o => o.st === 'paid' || o.st === 'accepted' || o.st === 'ready').length
   const navItems = [
     { id: 'order',    label: 'Order Food' },
@@ -188,7 +190,7 @@ function Sidebar({ tab, setTab, orders, user, role, onSignOut }) {
   ]
 
   return (
-    <div className="dash-sidebar" style={{ width: 200 }}>
+    <div className={`dash-sidebar${sidebarOpen ? ' open' : ''}`} style={{ width: 200 }}>
       {/* Logo */}
       <div className="dash-logo-area">
         <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>
@@ -332,8 +334,9 @@ function CartPanel({ cartItems, orderMode, pickupTime, setOrderMode, setPickupTi
   const isEmpty = cartItems.length === 0
   return (
     <div
+      className="cart-panel"
       style={{
-        width: 280, flexShrink: 0,
+        width: 280,
         background: '#0f1729',
         border: '1px solid rgba(255,255,255,0.1)',
         borderRadius: 16,
@@ -558,7 +561,7 @@ export default function StudentDashboard() {
 
   //  Render tabs 
   const renderOrder = () => (
-    <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+    <div className="student-order-layout" style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
       {/* Left: stalls / menu */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: '#fff', marginBottom: 20, letterSpacing: '-0.02em' }}>
@@ -699,6 +702,11 @@ export default function StudentDashboard() {
                      Order confirmed - collecting at {order.pu}
                   </div>
                 )}
+                {order.st === 'preparing' && (
+                  <div style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.2)', borderRadius: 8, padding: '8px 12px', fontSize: 11, color: '#60a5fa', marginBottom: 12 }}>
+                    ⌛ Your order is being prepared
+                  </div>
+                )}
                 {order.st === 'ready' && (
                   <div style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 8, padding: '8px 12px', fontSize: 11, color: '#4ade80', marginBottom: 12 }}>
                      Your order is ready! Head to {order.stallName} to collect
@@ -784,8 +792,13 @@ export default function StudentDashboard() {
     </div>
   )
 
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0f1e', display: 'flex', fontFamily: 'Sora, system-ui, sans-serif' }}>
+    <div className="dash-root">
+      <button className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+        {sidebarOpen ? '✕' : '☰'}
+      </button>
       <Sidebar
         tab={tab}
         setTab={setTab}
@@ -793,9 +806,12 @@ export default function StudentDashboard() {
         user={user}
         role={role}
         onSignOut={() => { logout(); navigate('/') }}
+        sidebarOpen={sidebarOpen}
+        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
       />
+      {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
 
-      <div className="dash-main">
+      <div className="dash-main" onClick={() => sidebarOpen && setSidebarOpen(false)}>
         {tab === 'order' && renderOrder()}
         {tab === 'myorders' && renderMyOrders()}
         {tab === 'profile' && renderProfile()}

@@ -58,13 +58,13 @@ const NAV = [
   { key: 'stalls',   label: 'Stalls' },
 ]
 
-function Sidebar({ tab, setTab, user, onSignOut }) {
+function Sidebar({ tab, setTab, user, onSignOut, sidebarOpen }) {
   const initials = user
     ? `${(user.firstName || user.name || 'A')[0]}${(user.lastName || '')[0] || ''}`.toUpperCase()
     : 'AD'
 
   return (
-    <div className="dash-sidebar" style={{ width: 200 }}>
+    <div className={`dash-sidebar${sidebarOpen ? ' open' : ''}`} style={{ width: 200 }}>
       <div className="dash-logo-area">
         <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>
           Strath<em style={{ color: '#f0b429', fontStyle: 'normal' }}>Eats</em>
@@ -204,7 +204,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* KPI cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 20 }}>
+      <div className="admin-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 20 }}>
         {kpis.map((k, i) => (
           <div key={i} style={{ ...card, borderTop: `3px solid ${k.border}`, padding: '18px 20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
@@ -218,7 +218,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Charts row 1 */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+      <div className="admin-chart-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
         <div style={card}>
           <div style={{ fontWeight: 700, color: '#fff', fontSize: 13, marginBottom: 14 }}>Orders & Revenue Trend</div>
           <ResponsiveContainer width="100%" height={240}>
@@ -475,11 +475,17 @@ export default function AdminDashboard() {
     </div>
   )
 
-  return (
-    <div style={{ minHeight: '100vh', background: '#0a0f1e', display: 'flex', fontFamily: 'Sora, system-ui, sans-serif' }}>
-      <Sidebar tab={tab} setTab={setTab} user={user} onSignOut={() => { logout(); navigate('/') }} />
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
-      <div className="dash-main">
+  return (
+    <div className="dash-root">
+      <button className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+        {sidebarOpen ? '✕' : '☰'}
+      </button>
+      <Sidebar tab={tab} setTab={setTab} user={user} onSignOut={() => { logout(); navigate('/') }} sidebarOpen={sidebarOpen} />
+      {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+
+      <div className="dash-main" onClick={() => sidebarOpen && setSidebarOpen(false)}>
         {tab === 'overview' && renderOverview()}
         {tab === 'orders'   && renderOrders()}
         {tab === 'stalls'   && renderStalls()}
