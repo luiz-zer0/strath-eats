@@ -8,6 +8,8 @@ import { subscribeToStalls } from '../../services/stallService'
 import { formatCurrency, formatDate } from '../../utils/formatters'
 import { downloadReceipt } from '../../utils/receipt'
 import { triggerMpesaStkPush } from '../../services/orderservice'
+import { db } from '../../services/firebase'
+import { collection,addDoc} from 'firebase/firestore'
 
 //  Status config 
 const STATUS = {
@@ -546,21 +548,34 @@ export default function StudentDashboard() {
     if (cartItems.length === 0) { addToast('Your cart is empty', 'error'); return }
     if (!pickupTime) { addToast('Please select a pickup time', 'error'); return }
 
+    const orderRef = await addDoc(collection(db, "orders"), {
+      userId: user.uid || user.id || 'unknown_student', // Link to the user account
+      stallId: selectedStallObj.id,                     // Link to the vendor stall
+      stallName: selectedStallObj.name,                 // Saved for easy dashboard rendering
+      items: cartItems,                                 // The food array inside the cart
+      tot: Math.round(getTotal()),                      // The total value
+      mode: orderMode,                                  // Dine-in or Takeaway
+      pu: pickupTime,                                   // The pickup target schedule
+      st: "pending",                                    // Initial state before PIN entry
+      createdAt: new Date().toISOString()
+    });
+
+    console.log("Firestore order created successfully with tracking ID:", orderRef.id);
     addToast('STK Push sent to ' + (user?.mpesa || 'your phone') + '...', 'info')
 
     try {
       await triggerMpesaStkPush({
         phone: user.mpesa,
         amount: getTotal(),
-        order_id: selectedStallObj.id
+        order_id: orderRef.id
       })
     } catch (error) {
-      console.error('Checkout failed', error)
+      console.error('Checkout process encountered a structural failure:', error)
       addToast('Could not reach payment server.', 'error')
     }
   }
 
-  // â”€â”€ Render tabs â”€â”€
+  //  Render tabs 
   const renderOrder = () => (
     <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
       {/* Left: stalls / menu */}
