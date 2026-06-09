@@ -6,16 +6,20 @@ import {
   subscribeToUserOrders,
 } from '../services/orderservice'
 import { db } from '../services/firebase'
+
 const OrdersContext = createContext()
 
 export const OrdersProvider = ({ children }) => {
-  const { user, isLoggedIn } = useAuth()
+  // ✨ FIX 1: Extract the 'role' variable from AuthContext
+  const { user, isLoggedIn, role } = useAuth() 
+  
   const [orders, setOrders] = useState([])
   const [loadingOrders, setLoadingOrders] = useState(false)
   const [ordersError, setOrdersError] = useState(null)
 
   useEffect(() => {
-    if (!isLoggedIn || !user?.uid) {
+    // ✨ FIX 2: If no user is logged in, OR if the user is a vendor, stop immediately!
+    if (!isLoggedIn || !user?.uid || role === 'vendor') {
       setOrders([])
       setLoadingOrders(false)
       return undefined
@@ -38,24 +42,24 @@ export const OrdersProvider = ({ children }) => {
     )
 
     return () => unsubscribe?.()
-  }, [isLoggedIn, user?.uid])
+  }, [isLoggedIn, user?.uid, role]) // ✨ FIX 3: Added 'role' to the dependency array
 
   const placeOrder = async (orderData) => {
-  // 1. Safely construct the student's full name from their profile
-  const displayName = user?.firstName 
-    ? `${user.firstName} ${user.lastName || ''}`.trim() 
-    : user?.name || 'Student';
+    // 1. Safely construct the student's full name from their profile
+    const displayName = user?.firstName 
+      ? `${user.firstName} ${user.lastName || ''}`.trim() 
+      : user?.name || 'Student';
 
-  // 2. Attach it to the order payload
-  const order = await createFirestoreOrder({
-    ...orderData,
-    userId: user?.uid || orderData.userId,
-    userEmail: user?.email || orderData.userEmail || '',
-    user: displayName,         // <-- The Vendor Dashboard reads this exact field
-    userName: displayName,     // <-- Added as a safe fallback
-  })
-  return order
-}
+    // 2. Attach it to the order payload
+    const order = await createFirestoreOrder({
+      ...orderData,
+      userId: user?.uid || orderData.userId,
+      userEmail: user?.email || orderData.userEmail || '',
+      user: displayName,         // <-- The Vendor Dashboard reads this exact field
+      userName: displayName,     // <-- Added as a safe fallback
+    })
+    return order
+  }
 
   const updateOrderStatus = async (orderId, status) => {
     await updateFirestoreOrderStatus(orderId, status)
