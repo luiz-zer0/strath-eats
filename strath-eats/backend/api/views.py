@@ -47,8 +47,14 @@ from rest_framework import status
 # --- NEW: FIREBASE ADMIN IMPORTS ---
 import firebase_admin
 from firebase_admin import credentials, firestore
-
 # Initialize Firebase (This connects Django to Firestore)
+
+current_directory = os.path.dirname(os.path.abspath(__file__))
+
+# 2. Tell Python the credentials file is sitting right next to it
+credentials_path = os.path.join(current_directory, 'firebase-credentials.json')
+
+
 # Ensure the file name matches the JSON file you just downloaded
 if not firebase_admin._apps:
     cred = credentials.Certificate('firebase-credentials.json')
