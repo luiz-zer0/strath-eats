@@ -5,7 +5,7 @@ import {
   updateOrderStatus as updateFirestoreOrderStatus,
   subscribeToUserOrders,
 } from '../services/orderservice'
-
+import { db } from '../services/firebase'
 const OrdersContext = createContext()
 
 export const OrdersProvider = ({ children }) => {

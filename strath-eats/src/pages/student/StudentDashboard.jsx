@@ -548,18 +548,25 @@ export default function StudentDashboard() {
     if (cartItems.length === 0) { addToast('Your cart is empty', 'error'); return }
     if (!pickupTime) { addToast('Please select a pickup time', 'error'); return }
 
-    const orderRef = await addDoc(collection(db, "orders"), {
-      userId: user.uid || user.id || 'unknown_student', // Link to the user account
-      stallId: selectedStallObj.id,                     // Link to the vendor stall
-      stallName: selectedStallObj.name,                 // Saved for easy dashboard rendering
-      items: cartItems,                                 // The food array inside the cart
-      tot: Math.round(getTotal()),                      // The total value
-      mode: orderMode,                                  // Dine-in or Takeaway
-      pu: pickupTime,                                   // The pickup target schedule
-      st: "pending",                                    // Initial state before PIN entry
-      createdAt: new Date().toISOString()
-    });
+   try {
+      addToast('Creating order records...', 'info')
 
+      // 1. Call the official context function to write the document into Firestore
+      const newOrder = await placeOrder({
+        stallId: selectedStallObj.id,
+        stallName: selectedStallObj.name,
+        items: cartItems,
+        tot: Math.round(getTotal()),
+        mode: orderMode,
+        pu: pickupTime,
+        st: "pending", // Starts as pending until M-Pesa sends the payment receipt
+        createdAt: new Date().toISOString()
+      });
+
+      } catch (error) {
+      console.error('Checkout pipeline encountered a failure:', error);
+      addToast('Could not complete payment configuration.', 'error');
+    }
     console.log("Firestore order created successfully with tracking ID:", orderRef.id);
     addToast('STK Push sent to ' + (user?.mpesa || 'your phone') + '...', 'info')
 
@@ -567,7 +574,7 @@ export default function StudentDashboard() {
       await triggerMpesaStkPush({
         phone: user.mpesa,
         amount: getTotal(),
-        order_id: orderRef.id
+        order_id: newOrder.id,
       })
     } catch (error) {
       console.error('Checkout process encountered a structural failure:', error)
