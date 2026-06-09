@@ -13,6 +13,7 @@ import { collection,addDoc} from 'firebase/firestore'
 
 //  Status config 
 const STATUS = {
+  pending:   { label: 'Pending Payment', color: '#f87171', bg: 'rgba(248,113,113,0.12)', step: -1 },
   paid:      { label: 'Paid',      color: '#fb923c', bg: 'rgba(251,146,60,0.12)',  step: 0 },
   accepted:  { label: 'Confirmed', color: '#f0b429', bg: 'rgba(240,180,41,0.12)',  step: 1 },
   ready:     { label: 'Ready!',    color: '#4ade80', bg: 'rgba(74,222,128,0.12)',  step: 2 },
@@ -692,7 +693,7 @@ export default function StudentDashboard() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {orders.map(order => {
-            const status = STATUS[order.st] || STATUS.paid
+            const status = STATUS[order.st] || STATUS.pending
             const stall = stalls.find(s => s.id === order.stallId)
             return (
               <div
