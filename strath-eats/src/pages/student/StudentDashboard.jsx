@@ -544,12 +544,12 @@ export default function StudentDashboard() {
     setPortionItem(null)
   }
 
-  const handleCheckout = async() => {
+  const handleCheckout = async () => {
     if (cartItems.length === 0) { addToast('Your cart is empty', 'error'); return }
     if (!pickupTime) { addToast('Please select a pickup time', 'error'); return }
 
-   try {
-      addToast('Creating order records...', 'info')
+    try {
+      addToast('Creating order records...', 'info');
 
       // 1. Call the official context function to write the document into Firestore
       const newOrder = await placeOrder({
@@ -559,26 +559,28 @@ export default function StudentDashboard() {
         tot: Math.round(getTotal()),
         mode: orderMode,
         pu: pickupTime,
-        st: "pending", // Starts as pending until M-Pesa sends the payment receipt
+        st: "pending",
         createdAt: new Date().toISOString()
       });
 
-      } catch (error) {
-      console.error('Checkout pipeline encountered a failure:', error);
-      addToast('Could not complete payment configuration.', 'error');
-    }
-    console.log("Firestore order created successfully with tracking ID:", orderRef.id);
-    addToast('STK Push sent to ' + (user?.mpesa || 'your phone') + '...', 'info')
+      
+      console.log("Firestore order created successfully with tracking ID:", newOrder.id);
+      addToast('STK Push sent to ' + (user?.mpesa || 'your phone') + '...', 'info');
 
-    try {
+      // 2. Trigger M-Pesa Push using a safe fallback phone number
       await triggerMpesaStkPush({
-        phone: user.mpesa,
+        phone: user?.mpesa || "07XXXXXXXX", 
         amount: getTotal(),
         order_id: newOrder.id,
-      })
+      });
+
+      // 3. Clear cart and jump to orders tab
+      clearCart();
+      setTab('myorders');
+
     } catch (error) {
-      console.error('Checkout process encountered a structural failure:', error)
-      addToast('Could not reach payment server.', 'error')
+      console.error('Checkout pipeline encountered a failure:', error);
+      addToast('Could not complete payment configuration.', 'error');
     }
   }
 

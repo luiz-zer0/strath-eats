@@ -34,7 +34,6 @@ class AdminStatsViewSet(viewsets.ModelViewSet):
     serializer_class = AdminStatsSerializer
 
 
-
 import os
 import base64
 import json
@@ -44,6 +43,18 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
+
+# --- NEW: FIREBASE ADMIN IMPORTS ---
+import firebase_admin
+from firebase_admin import credentials, firestore
+
+# Initialize Firebase (This connects Django to Firestore)
+# Ensure the file name matches the JSON file you just downloaded
+if not firebase_admin._apps:
+    cred = credentials.Certificate('firebase-credentials.json')
+    firebase_admin.initialize_app(cred)
+
+db = firestore.client()
 
 # Safaricom configuration
 CONSUMER_KEY = os.environ.get('MPESA_CONSUMER_KEY')
@@ -55,10 +66,8 @@ def get_mpesa_access_token():
     """Authenticates with Safaricom and gets a temporary access token."""
     api_url = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
     r = requests.get(api_url, auth=(CONSUMER_KEY, CONSUMER_SECRET))
-
     if r.status_code != 200:
         print(f"DEBUG: Token request failed with {r.status_code}: {r.text}")
-
     return r.json()['access_token']
     
 
@@ -68,12 +77,11 @@ def trigger_stk_push(request):
     """Triggered by React when the student clicks 'Pay via M-Pesa'"""
     phone = request.data.get('phone')
     amount = request.data.get('amount')
-    order_id = request.data.get('order_id') # The Firestore Order ID
+    order_id = request.data.get('order_id') 
     
     if not phone or not amount or not order_id:
         return Response({"error": "Phone, amount, and order_id are required."}, status=400)
 
-    # Clean the phone number (Convert 07... to 2547...)
     if phone.startswith('0'):
         phone = '254' + phone[1:]
 
@@ -81,7 +89,6 @@ def trigger_stk_push(request):
     api_url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
     headers = {"Authorization": f"Bearer {access_token}"}
     
-    # Generate timestamp and password exactly how Safaricom requires it
     timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
     password_str = f"{SHORTCODE}{PASSKEY}{timestamp}"
     password = base64.b64encode(password_str.encode('utf-8')).decode('utf-8')
@@ -103,48 +110,47 @@ def trigger_stk_push(request):
     try:
         response = requests.post(api_url, json=payload, headers=headers)
         response_data = response.json()
-
-        print("DEBUG - Keys received from Safaricom:", list(response_data.keys()))
-        print("DEBUG - Full Response Object:", response_data)
         
         checkout_request_id = response_data.get('CheckoutRequestID')
         if checkout_request_id:
+            # ✨ THE FIX: Save the Safaricom Tracking ID right onto the Firestore order
+            db.collection('orders').document(order_id).update({
+                'checkoutRequestId': checkout_request_id
+            })
+            
             return Response({"message": "STK Push sent!", "checkout_request_id": checkout_request_id})
         else:
             return Response({"error": "ID missing", "raw_response": response_data}, status=400)
         
     except Exception as e:
         return Response({"error": str(e)}, status=500)
-        
-    # except Exception as e:
-    #     return Response({"error": str(e)}, status=500)
-    #     return Response({
-    #         "message": "STK Push sent!", 
-    #         "checkout_request_id": checkout_request_id
-    #     })
-        
-
-
-
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def mpesa_callback(request):
     """Safaricom sends the digital receipt here after the student types their PIN"""
-    # Safaricom sends data inside a 'Body' -> 'stkCallback' structure
     callback_data = request.data.get('Body', {}).get('stkCallback', {})
     
     result_code = callback_data.get('ResultCode')
     checkout_request_id = callback_data.get('CheckoutRequestID')
     
+    if not checkout_request_id:
+        return Response({"ResultCode": 1, "ResultDesc": "Missing ID"})
+
+    # Search Firestore for the exact order that matches this Safaricom receipt
+    orders_ref = db.collection('orders').where('checkoutRequestId', '==', checkout_request_id).stream()
+    
     if result_code == 0:
         # SUCCESS! The student paid.
-        # Here is where we will write the code to update Firestore to "st: paid"
-        print(f"✅ SUCCESS: Payment {checkout_request_id} went through!")
+        for doc in orders_ref:
+            # ✨ THE MAGIC: Flip the switch to trigger the React UI update
+            doc.reference.update({'st': 'paid'})
+            print(f"✅ SUCCESS: Order {doc.id} successfully marked as PAID!")
     else:
-        # FAILED! (Student cancelled, wrong PIN, no balance)
-        print(f"❌ FAILED: Payment {checkout_request_id} failed.")
+        # FAILED (Student cancelled, insufficient funds, etc.)
+        for doc in orders_ref:
+            doc.reference.update({'st': 'failed'})
+            print(f"❌ FAILED: Order {doc.id} marked as FAILED.")
 
-    # Safaricom expects a simple "I received it" response
     return Response({"ResultCode": 0, "ResultDesc": "Accepted"})

@@ -1,11 +1,9 @@
-<<<<<<< HEAD
 node_modules/
 dist/
 .env
 .env.local
 .DS_Store
 *.log
-=======
 # Logs
 logs
 *.log
@@ -75,4 +73,5 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
->>>>>>> 25a04264c863c32e734c625e78e49c11c9ada86a
+
+firebase-credentials.json
