@@ -148,6 +148,7 @@ export default function VendorDashboard() {
   const [stallId, setStallId] = useState(null)
   const [loadingStall, setLoadingStall] = useState(true)
   const [firestoreError, setFirestoreError] = useState(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const getVendorDraftKey = (id) => `stratheats:vendor-stall:${id}`
 
@@ -820,8 +821,6 @@ export default function VendorDashboard() {
       </div>
     </div>
   )
-
-  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
     <div className="dash-root">

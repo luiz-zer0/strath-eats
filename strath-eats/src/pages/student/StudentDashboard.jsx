@@ -496,6 +496,7 @@ export default function StudentDashboard() {
   const [tab, setTab] = useState('order')
   const [selectedStallObj, setSelectedStallObj] = useState(null)
   const [portionItem, setPortionItem] = useState(null) // item awaiting portion selection
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   if (!isLoggedIn) {
     navigate('/order')
@@ -791,8 +792,6 @@ export default function StudentDashboard() {
       </div>
     </div>
   )
-
-  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
     <div className="dash-root">

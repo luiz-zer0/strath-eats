@@ -778,7 +778,7 @@ body {
   .dash-sidebar.open { transform: translateX(0); }
   .dash-sidebar.open + .sidebar-overlay { display: block; }
   .sidebar-toggle { display: flex; }
-  .dash-main { padding: 20px; margin-left: 0; }
+  .dash-main { padding: 20px; padding-top: 56px; margin-left: 0; }
   .student-order-layout { flex-wrap: wrap; }
   .cart-panel { width: 100% !important; }
   .admin-kpi-grid { grid-template-columns: repeat(2, 1fr); }

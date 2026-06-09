@@ -159,6 +159,7 @@ export default function AdminDashboard() {
   const [stallStatuses, setStallStatuses] = useState(
     Object.fromEntries(stalls.map(s => [s.id, 'active']))
   )
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   if (!isLoggedIn) { navigate('/admin'); return null }
 
@@ -474,8 +475,6 @@ export default function AdminDashboard() {
       </div>
     </div>
   )
-
-  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
     <div className="dash-root">
