@@ -57,6 +57,7 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   const login = async (userDataOrEmail, passwordOrRole, userRole) => {
+    // Path 1: Standard Email/Password login (This path already works perfectly)
     if (typeof userDataOrEmail === 'string') {
       const profile = await signIn(userDataOrEmail, passwordOrRole, userRole)
       setUser(profile)
@@ -65,7 +66,21 @@ export const AuthProvider = ({ children }) => {
       return profile
     }
 
+    // Path 2: The Object Bypass (Where the data was getting lost!)
     const userData = userDataOrEmail || {}
+    
+    // ✨ THE FIX: Force the context to fetch the custom Strathmore fields from Firestore
+    if (userData.uid) {
+      const fullProfile = await getUserProfile(userData.uid)
+      if (fullProfile) {
+        setUser(fullProfile)
+        setRole(fullProfile.role || null)
+        setIsLoggedIn(true)
+        return fullProfile
+      }
+    }
+
+    // Absolute Fallback
     setUser(userData)
     setRole(passwordOrRole || userData.role || null)
     setIsLoggedIn(true)
