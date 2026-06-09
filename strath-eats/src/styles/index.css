@@ -434,3 +434,287 @@ body {
 
 /* ── Divider ── */
 .divider { border: none; border-top: 1px solid var(--bd); }
+
+/* ── Auth page ── */
+.auth-page {
+  min-height: 100vh;
+  background: #080d1a;
+  font-family: 'Sora', system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+.auth-topbar {
+  padding: 16px 28px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.auth-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+.auth-card {
+  background: #141d35;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 18px;
+  padding: 24px;
+}
+.auth-tab-bar {
+  display: flex;
+  background: #141d35;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+}
+.auth-tab-btn {
+  flex: 1;
+  padding: 9px;
+  border-radius: 9px;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Sora', system-ui, sans-serif;
+  transition: all 0.13s;
+}
+.auth-tab-btn.active { background: #f0b429; color: #0a0f1e; }
+.auth-tab-btn:not(.active) { background: transparent; color: #64748b; }
+.auth-submit-btn {
+  width: 100%;
+  padding: 13px;
+  border-radius: 12px;
+  background: #f0b429;
+  color: #0a0f1e;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Sora', system-ui, sans-serif;
+  transition: all 0.15s;
+  margin-top: 4px;
+}
+.auth-submit-btn:hover {
+  background: #f7c948;
+  box-shadow: 0 6px 20px rgba(240,180,41,0.3);
+}
+
+/* ── Dashboard layout ── */
+.dash-sidebar {
+  width: 200px;
+  background: #0f1729;
+  border-right: 1px solid rgba(255,255,255,0.07);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+.dash-main {
+  flex: 1;
+  padding: 28px;
+  overflow-y: auto;
+  min-height: 100vh;
+}
+.dash-logo-area {
+  padding: 20px 16px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.dash-nav {
+  padding: 10px 8px;
+  flex: 1;
+}
+.dash-nav-header {
+  font-size: 9px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 8px 10px 6px;
+}
+.dash-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 2px;
+  font-family: 'Sora', system-ui, sans-serif;
+  font-size: 12px;
+  transition: all 0.13s;
+  text-align: left;
+}
+.dash-nav-item.active { background: rgba(240,180,41,0.1); color: #f0b429; font-weight: 700; }
+.dash-nav-item:not(.active) { background: transparent; color: #94a3b8; font-weight: 500; }
+.dash-nav-item:not(.active):hover { background: rgba(255,255,255,0.05); }
+.dash-nav-badge {
+  background: #dc2626;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 99px;
+}
+.dash-user-area {
+  padding: 12px 10px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+.dash-user-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  transition: all 0.13s;
+  margin-bottom: 8px;
+}
+.dash-user-btn:hover { background: rgba(255,255,255,0.04); }
+.dash-signout-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  color: #64748b;
+  font-family: 'Sora', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  transition: all 0.13s;
+}
+.dash-signout-btn:hover { background: rgba(248,113,113,0.08); color: #f87171; }
+
+/* ── Card variants ── */
+.card-gold-bump {
+  background: #141d35;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.card-gold-bump:hover {
+  border-color: rgba(240,180,41,0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.4);
+}
+
+/* ── Order cards ── */
+.order-card {
+  background: #141d35;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+/* ── Toast container ── */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 9999;
+}
+.toast-item {
+  background: #141d35;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 11px 16px;
+  font-size: 12px;
+  color: #e2e8f0;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  max-width: 320px;
+  animation: slideIn 0.2s ease;
+}
+
+/* ── Page headings ── */
+.page-h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+.page-h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+/* ── Form elements (dark) ── */
+.input-dark {
+  width: 100%;
+  padding: 11px 14px;
+  background: #0f1729;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  font-size: 13px;
+  color: #e2e8f0;
+  font-family: 'Sora', system-ui, sans-serif;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.input-dark:focus {
+  border-color: #f0b429;
+  box-shadow: 0 0 0 3px rgba(240,180,41,0.1);
+}
+
+/* ── Gold text link ── */
+.link-gold {
+  color: #f0b429;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+  font-family: 'Sora', system-ui, sans-serif;
+  transition: color 0.13s;
+}
+.link-gold:hover { color: #f7c948; }
+
+/* ── Back button ── */
+.back-btn {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Sora', system-ui, sans-serif;
+  transition: color 0.13s;
+}
+.back-btn:hover { color: #f0b429; }
+
+/* ── Verify email page ── */
+.verify-page {
+  min-height: 100vh;
+  background: #080d1a;
+  color: #e2e8f0;
+  font-family: 'Sora', system-ui, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.verify-card {
+  width: 100%;
+  max-width: 460px;
+  background: #141d35;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 24px;
+}

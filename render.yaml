@@ -12,4 +12,4 @@ services:
   - type: static
     name: my-react-frontend
     buildCommand: "npm install && npm run build"
-    staticPublishPath: "frontend/dist" # Adjust this to your build output folder
+    staticPublishPath: "strath-eats/dist"

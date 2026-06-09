@@ -70,8 +70,7 @@ export function subscribeToAllOrders(callback) {
 
 // ── Trigger M-Pesa STK Push (Django Backend) ─────────────────────
 export async function triggerMpesaStkPush(orderData) {
-  // Use your permanent Render URL here
-  const BACKEND_URL = "https://strath-eats.onrender.com"; 
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://strath-eats.onrender.com"; 
 
   const response = await fetch(`${BACKEND_URL}/api/stk-push/`, {
     method: 'POST',

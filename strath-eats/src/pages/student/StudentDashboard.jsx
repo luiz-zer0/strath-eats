@@ -188,12 +188,9 @@ function Sidebar({ tab, setTab, orders, user, role, onSignOut }) {
   ]
 
   return (
-    <div
-      className="flex flex-col"
-      style={{ width: 200, background: '#0f1729', borderRight: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}
-    >
+    <div className="dash-sidebar" style={{ width: 200 }}>
       {/* Logo */}
-      <div style={{ padding: '20px 16px 14px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+      <div className="dash-logo-area">
         <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>
           Strath<em style={{ color: '#f0b429', fontStyle: 'normal' }}>Eats</em>
         </div>
@@ -203,51 +200,29 @@ function Sidebar({ tab, setTab, orders, user, role, onSignOut }) {
       </div>
 
       {/* Nav */}
-      <nav style={{ padding: '10px 8px', flex: 1 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '8px 10px 6px' }}>
-          Menu
-        </div>
+      <nav className="dash-nav">
+        <div className="dash-nav-header">Menu</div>
         {navItems.map(item => (
           <button
             key={item.id}
             onClick={() => setTab(item.id)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 9,
-              width: '100%', padding: '9px 10px', borderRadius: 10,
-              border: 'none', cursor: 'pointer', marginBottom: 2,
-              background: tab === item.id ? 'rgba(240,180,41,0.1)' : 'transparent',
-              color: tab === item.id ? '#f0b429' : '#94a3b8',
-              fontFamily: 'Sora, system-ui, sans-serif',
-              fontSize: 12, fontWeight: tab === item.id ? 700 : 500,
-              transition: 'all 0.13s', textAlign: 'left',
-            }}
+            className={`dash-nav-item ${tab === item.id ? 'active' : ''}`}
             onMouseEnter={e => { if (tab !== item.id) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
             onMouseLeave={e => { if (tab !== item.id) e.currentTarget.style.background = 'transparent' }}
           >
             <span style={{ flex: 1 }}>{item.label}</span>
             {item.badge && (
-              <span style={{
-                background: '#dc2626', color: '#fff', fontSize: 9, fontWeight: 700,
-                padding: '2px 6px', borderRadius: 99,
-              }}>
-                {item.badge}
-              </span>
+              <span className="dash-nav-badge">{item.badge}</span>
             )}
           </button>
         ))}
       </nav>
 
       {/* User info + sign out */}
-      <div style={{ padding: '12px 10px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+      <div className="dash-user-area">
         <button
           onClick={() => setTab('profile')}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 9,
-            width: '100%', padding: '8px 10px', borderRadius: 10,
-            border: 'none', cursor: 'pointer', marginBottom: 8,
-            background: 'transparent',
-            transition: 'all 0.13s',
-          }}
+          className="dash-user-btn"
           onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
           onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
         >
@@ -269,14 +244,7 @@ function Sidebar({ tab, setTab, orders, user, role, onSignOut }) {
         </button>
         <button
           onClick={onSignOut}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            width: '100%', padding: '8px 10px', borderRadius: 10,
-            border: 'none', cursor: 'pointer',
-            background: 'transparent', color: '#64748b',
-            fontFamily: 'Sora, system-ui, sans-serif',
-            fontSize: 11, fontWeight: 500, transition: 'all 0.13s',
-          }}
+          className="dash-signout-btn"
           onMouseEnter={e => { e.currentTarget.style.background = 'rgba(248,113,113,0.08)'; e.currentTarget.style.color = '#f87171' }}
           onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b' }}
         >
@@ -568,9 +536,12 @@ export default function StudentDashboard() {
       console.log("Firestore order created successfully with tracking ID:", newOrder.id);
       addToast('STK Push sent to ' + (user?.mpesa || 'your phone') + '...', 'info');
 
-      // 2. Trigger M-Pesa Push using a safe fallback phone number
+      if (!user?.mpesa) {
+        addToast('Please set your M-Pesa number in your profile', 'error');
+        return;
+      }
       await triggerMpesaStkPush({
-        phone: user?.mpesa || "07XXXXXXXX", 
+        phone: user.mpesa,
         amount: getTotal(),
         order_id: newOrder.id,
       });
@@ -815,7 +786,6 @@ export default function StudentDashboard() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#0a0f1e', display: 'flex', fontFamily: 'Sora, system-ui, sans-serif' }}>
-      {/* Sidebar */}
       <Sidebar
         tab={tab}
         setTab={setTab}
@@ -825,14 +795,12 @@ export default function StudentDashboard() {
         onSignOut={() => { logout(); navigate('/') }}
       />
 
-      {/* Main */}
-      <div style={{ flex: 1, padding: '28px 28px', overflowY: 'auto', minHeight: '100vh' }}>
+      <div className="dash-main">
         {tab === 'order' && renderOrder()}
         {tab === 'myorders' && renderMyOrders()}
         {tab === 'profile' && renderProfile()}
       </div>
 
-      {/* Portion modal */}
       {portionItem && (
         <PortionModal
           item={portionItem}
@@ -841,18 +809,12 @@ export default function StudentDashboard() {
         />
       )}
 
-      {/* Toast stack */}
-      <div style={{ position: 'fixed', bottom: 24, right: 24, display: 'flex', flexDirection: 'column', gap: 8, zIndex: 9999 }}>
+      <div className="toast-container">
         {toasts.map(t => (
           <div
             key={t.id}
-            style={{
-              background: '#141d35', border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: 10, padding: '11px 16px', fontSize: 12, color: '#e2e8f0',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.5)', maxWidth: 320,
-              borderLeft: `3px solid ${t.type === 'success' ? '#4ade80' : t.type === 'error' ? '#f87171' : '#f0b429'}`,
-              animation: 'slideIn 0.2s ease',
-            }}
+            className="toast-item"
+            style={{ borderLeft: `3px solid ${t.type === 'success' ? '#4ade80' : t.type === 'error' ? '#f87171' : '#f0b429'}` }}
           >
             {t.msg}
           </div>

@@ -66,8 +66,8 @@ export default function VerifyEmail() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#080d1a', color: '#e2e8f0', fontFamily: 'Sora, system-ui, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div style={{ width: '100%', maxWidth: 460, background: '#141d35', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 24 }}>
+    <div className="verify-page">
+      <div className="verify-card">
         <h1 style={{ margin: 0, fontSize: 26, color: '#fff' }}>Verify Your Email</h1>
         <p style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.6 }}>
           We sent a verification link after signup. Verify your Strathmore email before signing in.
@@ -80,7 +80,8 @@ export default function VerifyEmail() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="name@strathmore.edu"
-            style={{ width: '100%', marginBottom: 12, padding: '11px 12px', background: '#0f1729', color: '#e2e8f0', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10 }}
+            className="input-dark"
+            style={{ marginBottom: 12 }}
           />
 
           {error && <p style={{ color: '#f87171', fontSize: 12, marginBottom: 10 }}>{error}</p>}

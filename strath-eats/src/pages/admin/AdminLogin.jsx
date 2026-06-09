@@ -4,6 +4,9 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/common/Toast'
 import { Button } from '../../components/common/Button'
 
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@stratheats.com'
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'admin'
+
 export default function AdminLogin() {
   const navigate = useNavigate()
   const { login } = useAuth()
@@ -29,8 +32,7 @@ export default function AdminLogin() {
       return
     }
 
-    // Simple check for demo (in real app, would validate against backend)
-    if (formData.email === 'admin@stratheats.com' && formData.password === 'admin') {
+    if (formData.email === ADMIN_EMAIL && formData.password === ADMIN_PASSWORD) {
       login({ email: formData.email }, 'admin')
       addToast('Welcome to admin portal', 'success')
       navigate('/admin/dashboard')
@@ -94,7 +96,7 @@ export default function AdminLogin() {
           </form>
 
           <p className="text-11px text-txtd text-center mt-6">
-            Demo: admin@stratheats.com / admin
+            Demo: {ADMIN_EMAIL} / {ADMIN_PASSWORD}
           </p>
         </div>
       </div>

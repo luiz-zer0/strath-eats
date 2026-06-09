@@ -38,33 +38,19 @@ function useToast() {
   return { toasts, add }
 }
 
-//  Shared input style 
-const inp = {
-  width: '100%',
-  padding: '11px 14px',
-  background: '#0f1729',
-  border: '1px solid rgba(255,255,255,0.1)',
-  borderRadius: 12,
-  fontSize: 13,
-  color: '#e2e8f0',
-  fontFamily: 'Sora, system-ui, sans-serif',
-  outline: 'none',
-  transition: 'border-color 0.15s, box-shadow 0.15s',
-}
-
 function Input({ label, ...props }) {
   const [focused, setFocused] = useState(false)
   return (
     <div style={{ marginBottom: 14 }}>
       {label && (
-        <label style={{ display: 'block', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', marginBottom: 7 }}>
+        <label className="auth-label" style={{ display: 'block', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', marginBottom: 7 }}>
           {label}
         </label>
       )}
       <input
         {...props}
+        className="input-dark"
         style={{
-          ...inp,
           borderColor: focused ? '#f0b429' : 'rgba(255,255,255,0.1)',
           boxShadow: focused ? '0 0 0 3px rgba(240,180,41,0.1)' : 'none',
         }}
@@ -158,25 +144,18 @@ export default function Auth() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#080d1a', fontFamily: 'Sora, system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+    <div className="auth-page">
 
       {/* Top bar */}
-      <div style={{ padding: '16px 28px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="auth-topbar">
         <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>
           Strath<em style={{ color: '#f0b429', fontStyle: 'normal' }}>Eats</em>
         </div>
-        <button
-          onClick={() => navigate('/order')}
-          style={{ fontSize: 12, fontWeight: 600, color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Sora, system-ui, sans-serif', transition: 'color 0.13s' }}
-          onMouseEnter={e => e.currentTarget.style.color = '#f0b429'}
-          onMouseLeave={e => e.currentTarget.style.color = '#64748b'}
-        >
-          Back
-        </button>
+        <button onClick={() => navigate('/order')} className="back-btn">Back</button>
       </div>
 
       {/* Body */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
+      <div className="auth-body">
         <div style={{ width: '100%', maxWidth: 420 }}>
 
           {/* Role pill */}
@@ -197,93 +176,46 @@ export default function Auth() {
           </p>
 
           {/* Tab toggle */}
-          <div style={{ display: 'flex', background: '#141d35', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 4, gap: 4, marginBottom: 24 }}>
+          <div className="auth-tab-bar">
             {['Sign in', 'Create account'].map((label, i) => {
               const active = isSignUp === (i === 1)
               return (
                 <button
                   key={label}
                   onClick={() => setIsSignUp(i === 1)}
-                  style={{
-                    flex: 1, padding: '9px', borderRadius: 9, border: 'none', cursor: 'pointer',
-                    background: active ? '#f0b429' : 'transparent',
-                    color: active ? '#0a0f1e' : '#64748b',
-                    fontSize: 12, fontWeight: 700,
-                    fontFamily: 'Sora, system-ui, sans-serif',
-                    transition: 'all 0.13s',
-                  }}
+                  className={`auth-tab-btn ${active ? 'active' : ''}`}
                 >{label}</button>
               )
             })}
           </div>
 
           {/* Form card */}
-          <div style={{ background: '#141d35', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 18, padding: 24 }}>
+          <div className="auth-card">
             <form onSubmit={handleSubmit}>
 
               {isSignUp && (
                 <>
-                  {/* Name row */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <Input label="First name"  value={form.firstName} onChange={set('firstName')} />
                     <Input label="Last name"   value={form.lastName}  onChange={set('lastName')}  />
                   </div>
-
-                  {/* ID */}
-                  <Input
-                    label={cfg.idLabel}
-                    value={form.id}
-                    onChange={set('id')}
-                  />
+                  <Input label={cfg.idLabel} value={form.id} onChange={set('id')} />
                 </>
               )}
 
-              {/* Email */}
-              <Input
-                label="Strathmore email"
-                type="email"
-                placeholder="Enter email address"
-                value={form.email}
-                onChange={set('email')}
-              />
+              <Input label="Strathmore email" type="email" placeholder="Enter email address" value={form.email} onChange={set('email')} />
 
               {isSignUp && (
-                /* M-Pesa */
-                <Input
-                  label="M-Pesa number (for payments)"
-                  type="tel"
-                  placeholder="07XX XXX XXX"
-                  value={form.mpesa}
-                  onChange={set('mpesa')}
-                />
+                <Input label="M-Pesa number (for payments)" type="tel" placeholder="07XX XXX XXX" value={form.mpesa} onChange={set('mpesa')} />
               )}
 
-              {/* Password */}
-              <Input
-                label="Password"
-                type="password"
-                placeholder="Input password"
-                value={form.password}
-                onChange={set('password')}
-              />
+              <Input label="Password" type="password" placeholder="Input password" value={form.password} onChange={set('password')} />
 
               {isSignUp && (
-                <Input
-                  label="Confirm password"
-                  type="password"
-                  placeholder="Confirm password"
-                  value={form.confirm}
-                  onChange={set('confirm')}
-                />
+                <Input label="Confirm password" type="password" placeholder="Confirm password" value={form.confirm} onChange={set('confirm')} />
               )}
 
-              {/* Submit */}
-              <button
-                type="submit"
-                style={{ width: '100%', padding: '13px', borderRadius: 12, background: '#f0b429', color: '#0a0f1e', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 700, fontFamily: 'Sora, system-ui, sans-serif', transition: 'all 0.15s', marginTop: 4 }}
-                onMouseEnter={e => { e.currentTarget.style.background = '#f7c948'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(240,180,41,0.3)' }}
-                onMouseLeave={e => { e.currentTarget.style.background = '#f0b429'; e.currentTarget.style.boxShadow = 'none' }}
-              >
+              <button type="submit" className="auth-submit-btn">
                 {isSignUp ? 'Create account' : 'Sign in'}
               </button>
             </form>
@@ -292,17 +224,11 @@ export default function Auth() {
           {/* Switch mode */}
           <p style={{ fontSize: 12, color: '#475569', textAlign: 'center', marginTop: 16 }}>
             {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
-            <button
-              onClick={() => setIsSignUp(p => !p)}
-              style={{ color: '#f0b429', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 12, fontFamily: 'Sora, system-ui, sans-serif' }}
-              onMouseEnter={e => e.currentTarget.style.color = '#f7c948'}
-              onMouseLeave={e => e.currentTarget.style.color = '#f0b429'}
-            >
+            <button onClick={() => setIsSignUp(p => !p)} className="link-gold">
               {isSignUp ? 'Sign in' : 'Sign up'}
             </button>
           </p>
 
-          {/* Quick demo hint */}
           {!isSignUp && (
             <div style={{ marginTop: 20, padding: '12px 16px', background: 'rgba(240,180,41,0.05)', border: '1px solid rgba(240,180,41,0.15)', borderRadius: 12, fontSize: 11, color: '#64748b', textAlign: 'center', lineHeight: 1.6 }}>
               Demo: use any email + password to sign in
@@ -312,9 +238,9 @@ export default function Auth() {
       </div>
 
       {/* Toasts */}
-      <div style={{ position: 'fixed', bottom: 24, right: 24, display: 'flex', flexDirection: 'column', gap: 8, zIndex: 9999 }}>
+      <div className="toast-container">
         {toasts.map(t => (
-          <div key={t.id} style={{ background: '#141d35', border: '1px solid rgba(255,255,255,0.12)', borderLeft: `3px solid ${t.type === 'success' ? '#4ade80' : t.type === 'error' ? '#f87171' : '#f0b429'}`, borderRadius: 10, padding: '11px 16px', fontSize: 12, color: '#e2e8f0', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', maxWidth: 320, animation: 'slideIn 0.2s ease' }}>
+          <div key={t.id} className="toast-item" style={{ borderLeft: `3px solid ${t.type === 'success' ? '#4ade80' : t.type === 'error' ? '#f87171' : '#f0b429'}` }}>
             {t.msg}
           </div>
         ))}

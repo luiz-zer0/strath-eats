@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-w)=vjx*sj#-@08m-6z1^dn8(c)!tdc7g$n@q=g*9kgihmqakff'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-w)=vjx*sj#-@08m-6z1^dn8(c)!tdc7g$n@q=g*9kgihmqakff')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -130,6 +130,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
     "https://strath-eats-front-end.onrender.com",
+    "http://localhost:5173",
+    "http://localhost:3000",
 ]
 
 CORS_ALLOW_CREDENTIALS = True

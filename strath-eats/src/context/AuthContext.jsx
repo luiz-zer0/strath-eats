@@ -109,7 +109,7 @@ export const AuthProvider = ({ children }) => {
       <div style={{ minHeight: '100vh', background: '#0a0f1e', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}></div>
-          <div style={{ fontSize: 13, color: '#64748b', fontFamily: 'Sora, system-ui, sans-serif' }}>Loading StrathEats...</div>
+          <div className="text-txs" style={{ fontSize: 13, fontFamily: 'Sora, system-ui, sans-serif' }}>Loading StrathEats...</div>
         </div>
       </div>
     )

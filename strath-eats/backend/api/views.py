@@ -53,9 +53,8 @@ from django.conf import settings # ✨ Import Django's master settings
 credentials_path = os.path.join(settings.BASE_DIR, 'firebase-credentials.json')
 
 
-# Ensure the file name matches the JSON file you just downloaded
 if not firebase_admin._apps:
-    cred = credentials.Certificate('firebase-credentials.json')
+    cred = credentials.Certificate(credentials_path)
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()
@@ -65,6 +64,9 @@ CONSUMER_KEY = os.environ.get('MPESA_CONSUMER_KEY')
 CONSUMER_SECRET = os.environ.get('MPESA_CONSUMER_SECRET')
 SHORTCODE = os.environ.get('MPESA_SHORTCODE')
 PASSKEY = os.environ.get('MPESA_PASSKEY')
+
+if not all([CONSUMER_KEY, CONSUMER_SECRET, SHORTCODE, PASSKEY]):
+    print("WARNING: M-Pesa environment variables are not fully set. STK Push will fail.")
 
 def get_mpesa_access_token():
     """Authenticates with Safaricom and gets a temporary access token."""
@@ -86,8 +88,13 @@ def trigger_stk_push(request):
     if not phone or not amount or not order_id:
         return Response({"error": "Phone, amount, and order_id are required."}, status=400)
 
+    phone = phone.strip()
     if phone.startswith('0'):
         phone = '254' + phone[1:]
+    elif phone.startswith('+'):
+        phone = phone[1:]
+    if not phone.startswith('254') or len(phone) != 12:
+        return Response({"error": "Invalid phone number format. Use 07XX XXX XXX."}, status=400)
 
     access_token = get_mpesa_access_token()
     api_url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
@@ -106,7 +113,7 @@ def trigger_stk_push(request):
         "PartyA": phone,
         "PartyB": SHORTCODE,
         "PhoneNumber": phone,
-        "CallBackURL": "https://strath-eats.onrender.com/api/mpesa-callback/", 
+        "CallBackURL": os.environ.get('MPESA_CALLBACK_URL', 'https://strath-eats.onrender.com/api/mpesa-callback/'), 
         "AccountReference": "StrathEats",
         "TransactionDesc": f"Payment for order {order_id}"
     }

@@ -56,9 +56,8 @@ function Sidebar({ tab, setTab, user, pendingCount, onSignOut }) {
     : 'Vendor'
 
   return (
-    <div style={{ width: 200, background: '#0f1729', borderRight: '1px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-      {/* Logo */}
-      <div style={{ padding: '20px 16px 14px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+    <div className="dash-sidebar" style={{ width: 200 }}>
+      <div className="dash-logo-area">
         <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>
           Strath<em style={{ color: '#f0b429', fontStyle: 'normal' }}>Eats</em>
         </div>
@@ -67,40 +66,25 @@ function Sidebar({ tab, setTab, user, pendingCount, onSignOut }) {
         </div>
       </div>
 
-      {/* Nav */}
-      <nav style={{ padding: '10px 8px', flex: 1 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '8px 10px 6px' }}>
-          Manage
-        </div>
+      <nav className="dash-nav">
+        <div className="dash-nav-header">Manage</div>
         {NAV.map(item => (
           <button
             key={item.key}
             onClick={() => setTab(item.key)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 9,
-              width: '100%', padding: '9px 10px', borderRadius: 10,
-              border: 'none', cursor: 'pointer', marginBottom: 2,
-              background: tab === item.key ? 'rgba(240,180,41,0.1)' : 'transparent',
-              color: tab === item.key ? '#f0b429' : '#94a3b8',
-              fontFamily: 'Sora, system-ui, sans-serif',
-              fontSize: 12, fontWeight: tab === item.key ? 700 : 500,
-              transition: 'all 0.13s', textAlign: 'left',
-            }}
+            className={`dash-nav-item ${tab === item.key ? 'active' : ''}`}
             onMouseEnter={e => { if (tab !== item.key) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
             onMouseLeave={e => { if (tab !== item.key) e.currentTarget.style.background = 'transparent' }}
           >
             <span style={{ flex: 1 }}>{item.label}</span>
             {item.key === 'orders' && pendingCount > 0 && (
-              <span style={{ background: '#dc2626', color: '#fff', fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 99 }}>
-                {pendingCount}
-              </span>
+              <span className="dash-nav-badge">{pendingCount}</span>
             )}
           </button>
         ))}
       </nav>
 
-      {/* User + sign out */}
-      <div style={{ padding: '12px 10px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+      <div className="dash-user-area">
         <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 10px', marginBottom: 6 }}>
           <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#f0b429', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#0a0f1e', flexShrink: 0 }}>
             {initials}
@@ -112,7 +96,7 @@ function Sidebar({ tab, setTab, user, pendingCount, onSignOut }) {
         </div>
         <button
           onClick={onSignOut}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 10px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'transparent', color: '#64748b', fontFamily: 'Sora, system-ui, sans-serif', fontSize: 11, fontWeight: 500, transition: 'all 0.13s' }}
+          className="dash-signout-btn"
           onMouseEnter={e => { e.currentTarget.style.background = 'rgba(248,113,113,0.08)'; e.currentTarget.style.color = '#f87171' }}
           onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b' }}
         >
@@ -831,17 +815,16 @@ export default function VendorDashboard() {
     <div style={{ minHeight:'100vh', background:'#0a0f1e', display:'flex', fontFamily:'Sora, system-ui, sans-serif' }}>
       <Sidebar tab={tab} setTab={setTab} user={user} pendingCount={pendingCount} onSignOut={()=>{ logout(); navigate('/') }} />
 
-      <div style={{ flex:1, padding:'28px', overflowY:'auto', minHeight:'100vh' }}>
+      <div className="dash-main">
         {tab==='orders'    && renderOrders()}
         {tab==='menu'      && renderMenu()}
         {tab==='analytics' && renderAnalytics()}
         {tab==='settings'  && renderSettings()}
       </div>
 
-      {/* Toasts */}
-      <div style={{ position:'fixed', bottom:24, right:24, display:'flex', flexDirection:'column', gap:8, zIndex:9999 }}>
+      <div className="toast-container">
         {toasts.map(t=>(
-          <div key={t.id} style={{ background:'#141d35', border:'1px solid rgba(255,255,255,0.12)', borderRadius:10, padding:'11px 16px', fontSize:12, color:'#e2e8f0', boxShadow:'0 8px 32px rgba(0,0,0,0.5)', maxWidth:320, borderLeft:`3px solid ${t.type==='success'?'#4ade80':t.type==='error'?'#f87171':'#f0b429'}`, animation:'slideIn 0.2s ease' }}>
+          <div key={t.id} className="toast-item" style={{ borderLeft:`3px solid ${t.type==='success'?'#4ade80':t.type==='error'?'#f87171':'#f0b429'}` }}>
             {t.msg}
           </div>
         ))}
