@@ -3,6 +3,7 @@ import { reload } from 'firebase/auth'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { resendVerification } from '../services/authservice'
 import { auth } from '../services/firebase'
+import '../styles/auth.css'
 
 export default function VerifyEmail() {
   const navigate = useNavigate()
@@ -68,30 +69,25 @@ export default function VerifyEmail() {
   return (
     <div className="verify-page">
       <div className="verify-card">
-        <h1 style={{ margin: 0, fontSize: 26, color: '#fff' }}>Verify Your Email</h1>
-        <p style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.6 }}>
+        <h1 className="verify-heading">Verify Your Email</h1>
+        <p className="verify-desc">
           We sent a verification link after signup. Verify your Strathmore email before signing in.
         </p>
 
-        <form onSubmit={handleResend} style={{ marginTop: 16 }}>
-          <label style={{ display: 'block', marginBottom: 8, fontSize: 12, color: '#94a3b8' }}>Strathmore Email</label>
+        <form onSubmit={handleResend} className="verify-form">
+          <label className="verify-label">Strathmore Email</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="name@strathmore.edu"
-            className="input-dark"
-            style={{ marginBottom: 12 }}
+            className="input-dark verify-input"
           />
 
-          {error && <p style={{ color: '#f87171', fontSize: 12, marginBottom: 10 }}>{error}</p>}
-          {message && <p style={{ color: '#4ade80', fontSize: 12, marginBottom: 10 }}>{message}</p>}
+          {error && <p className="verify-error">{error}</p>}
+          {message && <p className="verify-success">{message}</p>}
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{ width: '100%', padding: '12px 14px', border: 'none', borderRadius: 10, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', background: '#f0b429', color: '#0a0f1e' }}
-          >
+          <button type="submit" disabled={loading} className="verify-btn">
             {loading ? 'Sending...' : 'Resend Verification Email'}
           </button>
         </form>
@@ -99,14 +95,14 @@ export default function VerifyEmail() {
         <button
           onClick={handleCheckStatus}
           disabled={checking}
-          style={{ width: '100%', marginTop: 10, background: 'transparent', border: '1px solid rgba(255,255,255,0.18)', color: '#cbd5e1', padding: '10px 12px', borderRadius: 10, cursor: checking ? 'not-allowed' : 'pointer' }}
+          className="verify-btn-ghost"
         >
           {checking ? 'Checking...' : 'I clicked the link, check status'}
         </button>
 
         <button
           onClick={() => navigate('/auth')}
-          style={{ width: '100%', marginTop: 10, background: 'transparent', border: '1px solid rgba(255,255,255,0.18)', color: '#cbd5e1', padding: '10px 12px', borderRadius: 10, cursor: 'pointer' }}
+          className="verify-btn-ghost"
         >
           Back To Sign In
         </button>

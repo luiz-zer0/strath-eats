@@ -1,33 +1,30 @@
 ﻿import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { signInWithGoogle } from '../services/authservice'
+import '../styles/auth.css'
 
-//  Role config
 const ROLE_CFG = {
   student: {
     label: 'Student',
-
     idLabel: 'Student ID',
     idPlaceholder: 'e.g. 191603',
     color: '#3b82f6',
   },
   staff: {
     label: 'Staff / Lecturer',
-
     idLabel: 'Staff ID',
     idPlaceholder: 'e.g. STF-042',
     color: '#4ade80',
   },
   other: {
     label: 'Guest',
-
     idLabel: 'Visitor ID',
     idPlaceholder: 'Optional',
     color: '#a78bfa',
   },
 }
 
-//  Toast hook  
 function useToast() {
   const [toasts, setToasts] = useState([])
   const add = (msg, type = 'info') => {
@@ -43,13 +40,11 @@ function Input({ label, ...props }) {
   return (
     <div style={{ marginBottom: 14 }}>
       {label && (
-        <label className="auth-label" style={{ display: 'block', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', marginBottom: 7 }}>
-          {label}
-        </label>
+        <label className="auth-label">{label}</label>
       )}
       <input
         {...props}
-        className="input-dark"
+        className={`input-dark ${focused ? 'input-dark-border' : ''}`}
         style={{
           borderColor: focused ? '#f0b429' : 'rgba(255,255,255,0.1)',
           boxShadow: focused ? '0 0 0 3px rgba(240,180,41,0.1)' : 'none',
@@ -61,31 +56,31 @@ function Input({ label, ...props }) {
   )
 }
 
-//  Main 
 export default function Auth() {
   const location = useLocation()
-  const navigate  = useNavigate()
+  const navigate = useNavigate()
   const { login, register } = useAuth()
   const { toasts, add: addToast } = useToast()
 
-  const role   = location.state?.role || 'student'
-  const cfg    = ROLE_CFG[role] || ROLE_CFG.student
+  const role = location.state?.role || 'student'
+  const cfg = ROLE_CFG[role] || ROLE_CFG.student
 
   const [isSignUp, setIsSignUp] = useState(false)
   const [form, setForm] = useState({
     firstName: '',
-    lastName:  '',
-    id:        '',
-    email:     '',
-    mpesa:     '',
-    password:  '',
-    confirm:   '',
+    lastName: '',
+    id: '',
+    email: '',
+    mpesa: '',
+    password: '',
+    confirm: '',
   })
+  const [googleLoading, setGoogleLoading] = useState(false)
 
   const set = (field) => (e) => setForm(p => ({ ...p, [field]: e.target.value }))
 
   const validate = () => {
-    if (!form.email)    { addToast('Email is required', 'error');    return false }
+    if (!form.email) { addToast('Email is required', 'error'); return false }
     if (!form.password) { addToast('Password is required', 'error'); return false }
     if (!form.email.toLowerCase().endsWith('@strathmore.edu')) {
       addToast('Only @strathmore.edu accounts can use StrathEats', 'error')
@@ -93,9 +88,9 @@ export default function Auth() {
     }
     if (isSignUp) {
       if (!form.firstName) { addToast('First name is required', 'error'); return false }
-      if (!form.lastName)  { addToast('Last name is required', 'error');  return false }
+      if (!form.lastName) { addToast('Last name is required', 'error'); return false }
       if (form.password !== form.confirm) { addToast('Passwords do not match', 'error'); return false }
-      if (form.password.length < 6)       { addToast('Password must be at least 6 characters', 'error'); return false }
+      if (form.password.length < 6) { addToast('Password must be at least 6 characters', 'error'); return false }
     }
     return true
   }
@@ -106,13 +101,13 @@ export default function Auth() {
 
     const userData = {
       firstName: form.firstName || form.email.split('@')[0],
-      lastName:  form.lastName  || '',
-      email:     form.email,
-      password:  form.password,
-      mpesa:     form.mpesa     || '',
+      lastName: form.lastName || '',
+      email: form.email,
+      password: form.password,
+      mpesa: form.mpesa || '',
       studentId: role === 'student' ? form.id : '',
-      staffId:   role === 'staff'   ? form.id : '',
-      id:        form.id || '',
+      staffId: role === 'staff' ? form.id : '',
+      id: form.id || '',
     }
 
     try {
@@ -143,39 +138,54 @@ export default function Auth() {
     }
   }
 
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true)
+    try {
+      const profile = await signInWithGoogle(role)
+      await login(profile, profile.role || role)
+      addToast('Welcome back!', 'success')
+      navigate('/dashboard')
+    } catch (err) {
+      const msg = err?.code === 'auth/invalid-email-domain' ? 'Only @strathmore.edu accounts can use StrathEats'
+        : err?.code === 'auth/email-not-verified' ? 'Please use a Strathmore email with a verified Google account'
+        : err?.code === 'auth/popup-closed-by-user' ? 'Google sign-in cancelled'
+        : err?.code === 'auth/cancelled-popup-request' ? 'Google sign-in cancelled'
+        : err?.message || 'Google sign-in failed'
+      addToast(msg, 'error')
+    } finally {
+      setGoogleLoading(false)
+    }
+  }
+
   return (
     <div className="auth-page">
-
-      {/* Top bar */}
       <div className="auth-topbar">
-        <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>
-          Strath<em style={{ color: '#f0b429', fontStyle: 'normal' }}>Eats</em>
+        <div className="auth-brand">
+          Strath<em>Eats</em>
         </div>
         <button onClick={() => navigate('/order')} className="back-btn">Back</button>
       </div>
 
-      {/* Body */}
       <div className="auth-body">
         <div style={{ width: '100%', maxWidth: 420 }}>
-
-          {/* Role pill */}
           <div style={{ textAlign: 'center', marginBottom: 24 }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: `${cfg.color}18`, border: `1px solid ${cfg.color}40`, borderRadius: 99, padding: '6px 16px', fontSize: 12, fontWeight: 700, color: cfg.color }}>
+            <div
+              className="auth-role-pill"
+              style={{ background: `${cfg.color}18`, border: `1px solid ${cfg.color}40`, color: cfg.color }}
+            >
               <span>{cfg.label}</span>
             </div>
           </div>
 
-          {/* Heading */}
-          <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', textAlign: 'center', letterSpacing: '-0.03em', marginBottom: 6 }}>
+          <h1 className="auth-heading">
             {isSignUp ? 'Create your account' : 'Welcome back'}
           </h1>
-          <p style={{ fontSize: 13, color: '#64748b', textAlign: 'center', marginBottom: 28, lineHeight: 1.6 }}>
+          <p className="auth-subtext">
             {isSignUp
               ? `Sign up as a ${cfg.label.toLowerCase()} to start ordering`
               : `Sign in to your StrathEats account`}
           </p>
 
-          {/* Tab toggle */}
           <div className="auth-tab-bar">
             {['Sign in', 'Create account'].map((label, i) => {
               const active = isSignUp === (i === 1)
@@ -189,15 +199,13 @@ export default function Auth() {
             })}
           </div>
 
-          {/* Form card */}
           <div className="auth-card">
             <form onSubmit={handleSubmit}>
-
               {isSignUp && (
                 <>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    <Input label="First name"  value={form.firstName} onChange={set('firstName')} />
-                    <Input label="Last name"   value={form.lastName}  onChange={set('lastName')}  />
+                  <div className="auth-name-row">
+                    <Input label="First name" value={form.firstName} onChange={set('firstName')} />
+                    <Input label="Last name" value={form.lastName} onChange={set('lastName')} />
                   </div>
                   <Input label={cfg.idLabel} value={form.id} onChange={set('id')} />
                 </>
@@ -221,8 +229,29 @@ export default function Auth() {
             </form>
           </div>
 
-          {/* Switch mode */}
-          <p style={{ fontSize: 12, color: '#475569', textAlign: 'center', marginTop: 16 }}>
+          {!isSignUp && (
+            <>
+              <div className="auth-divider">
+                <span className="auth-divider-text">or continue with</span>
+              </div>
+
+              <button
+                onClick={handleGoogleSignIn}
+                disabled={googleLoading}
+                className="auth-google-btn"
+              >
+                <svg width="18" height="18" viewBox="0 0 48 48">
+                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                  <path fill="#FBBC05" d="M10.54 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.99 23.99 0 0 0 0 24c0 3.78.87 7.35 2.56 10.56l7.98-5.97z"/>
+                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 5.97C6.51 42.62 14.62 48 24 48z"/>
+                </svg>
+                {googleLoading ? 'Signing in...' : 'Sign in with Google'}
+              </button>
+            </>
+          )}
+
+          <p className="auth-switch-text">
             {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
             <button onClick={() => setIsSignUp(p => !p)} className="link-gold">
               {isSignUp ? 'Sign in' : 'Sign up'}
@@ -230,14 +259,13 @@ export default function Auth() {
           </p>
 
           {!isSignUp && (
-            <div style={{ marginTop: 20, padding: '12px 16px', background: 'rgba(240,180,41,0.05)', border: '1px solid rgba(240,180,41,0.15)', borderRadius: 12, fontSize: 11, color: '#64748b', textAlign: 'center', lineHeight: 1.6 }}>
+            <div className="auth-demo-note">
               Demo: use any email + password to sign in
             </div>
           )}
         </div>
       </div>
 
-      {/* Toasts */}
       <div className="toast-container">
         {toasts.map(t => (
           <div key={t.id} className="toast-item" style={{ borderLeft: `3px solid ${t.type === 'success' ? '#4ade80' : t.type === 'error' ? '#f87171' : '#f0b429'}` }}>

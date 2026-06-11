@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState, useContext } from 'react'
+import { createContext, useEffect, useState, useContext, useRef } from 'react'
 import { useAuth } from './AuthContext'
 import {
   placeOrder as createFirestoreOrder,
@@ -6,16 +6,18 @@ import {
   subscribeToUserOrders,
 } from '../services/orderservice'
 import { db } from '../services/firebase'
+import { requestNotificationPermission, sendBrowserNotification, getStatusNotificationData } from '../services/notificationservice'
 
 const OrdersContext = createContext()
 
 export const OrdersProvider = ({ children }) => {
-  // ✨ FIX 1: Extract the 'role' variable from AuthContext
   const { user, isLoggedIn, role } = useAuth() 
   
   const [orders, setOrders] = useState([])
   const [loadingOrders, setLoadingOrders] = useState(false)
   const [ordersError, setOrdersError] = useState(null)
+  const prevOrdersRef = useRef([])
+  const toastsRef = useRef(null)
 
   useEffect(() => {
     // ✨ FIX 2: If no user is logged in, OR if the user is a vendor, stop immediately!
@@ -43,6 +45,23 @@ export const OrdersProvider = ({ children }) => {
 
     return () => unsubscribe?.()
   }, [isLoggedIn, user?.uid, role]) // ✨ FIX 3: Added 'role' to the dependency array
+
+  useEffect(() => {
+    if (orders.length === 0) return
+    requestNotificationPermission()
+    const prev = prevOrdersRef.current
+    const prevMap = new Map(prev.map(o => [o.id, o.st]))
+    for (const order of orders) {
+      const prevSt = prevMap.get(order.id)
+      if (prevSt && prevSt !== order.st) {
+        const data = getStatusNotificationData(order, order.st)
+        if (data) {
+          sendBrowserNotification(data.title, { body: data.body })
+        }
+      }
+    }
+    prevOrdersRef.current = orders
+  }, [orders])
 
   const placeOrder = async (orderData) => {
     // 1. Safely construct the student's full name from their profile

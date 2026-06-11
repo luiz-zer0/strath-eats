@@ -1,6 +1,8 @@
 ﻿import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   sendEmailVerification,
   signOut,
   updateProfile,
@@ -9,6 +11,7 @@ import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from './firebase'
 
 const STRATHMORE_DOMAIN = '@strathmore.edu'
+const googleProvider = new GoogleAuthProvider()
 
 function buildActionCodeSettings() {
   return {
@@ -162,4 +165,42 @@ export async function logOut() {
 export async function getUserProfile(uid) {
   const snap = await getDoc(doc(db, 'users', uid))
   return snap.exists() ? { uid, ...snap.data() } : null
+}
+
+export async function signInWithGoogle(role = 'student') {
+  const result = await signInWithPopup(auth, googleProvider)
+  const user = result.user
+  const email = user.email || ''
+
+  assertStrathmoreEmail(email, role)
+
+  if (!user.emailVerified) {
+    const error = new Error('Please use a Strathmore email with a verified Google account.')
+    error.code = 'auth/email-not-verified'
+    throw error
+  }
+
+  const uid = user.uid
+  const snap = await getDoc(doc(db, 'users', uid))
+
+  if (!snap.exists()) {
+    const names = (user.displayName || email.split('@')[0]).split(' ')
+    const profile = {
+      uid,
+      firstName: names[0] || email.split('@')[0],
+      lastName: names.slice(1).join(' ') || '',
+      email,
+      stallName: '',
+      stallId: '',
+      mpesa: '',
+      studentId: role === 'student' ? 'GOOGLE' : '',
+      staffId: role === 'staff' ? 'GOOGLE' : '',
+      role,
+      createdAt: serverTimestamp(),
+    }
+    await setDoc(doc(db, 'users', uid), profile)
+    return profile
+  }
+
+  return { uid, ...snap.data() }
 }

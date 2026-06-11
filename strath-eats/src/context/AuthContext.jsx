@@ -1,16 +1,67 @@
-import { createContext, useEffect, useState, useContext } from 'react'
+import { createContext, useEffect, useState, useContext, useRef, useCallback } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '../services/firebase'
 import { signIn, signUp, logOut, getUserProfile } from '../services/authservice'
+import { requestNotificationPermission } from '../services/notificationservice'
+import '../styles/auth.css'
+
+const SESSION_TIMEOUT_MS = 30 * 60 * 1000
+const SESSION_WARNING_MS = 29 * 60 * 1000
 
 const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [user, setUser] = useState(null)
-  const [role, setRole] = useState(null) // 'student', 'staff', 'vendor', 'admin'
+  const [role, setRole] = useState(null)
   const [pendingVerification, setPendingVerification] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [sessionExpired, setSessionExpired] = useState(false)
+  const [sessionWarning, setSessionWarning] = useState(false)
+
+  const lastActivity = useRef(Date.now())
+  const warningTimer = useRef(null)
+  const logoutTimer = useRef(null)
+
+  const resetTimers = useCallback(() => {
+    lastActivity.current = Date.now()
+    setSessionWarning(false)
+    if (warningTimer.current) clearTimeout(warningTimer.current)
+    if (logoutTimer.current) clearTimeout(logoutTimer.current)
+  }, [])
+
+  const handleActivity = useCallback(() => {
+    if (!isLoggedIn || sessionExpired) return
+    resetTimers()
+    warningTimer.current = setTimeout(() => setSessionWarning(true), SESSION_WARNING_MS)
+    logoutTimer.current = setTimeout(() => {
+      setSessionExpired(true)
+      setSessionWarning(false)
+      window.location.href = '/'
+    }, SESSION_TIMEOUT_MS)
+  }, [isLoggedIn, sessionExpired, resetTimers])
+
+  useEffect(() => {
+    if (!isLoggedIn) return
+    requestNotificationPermission()
+    resetTimers()
+    warningTimer.current = setTimeout(() => setSessionWarning(true), SESSION_WARNING_MS)
+    logoutTimer.current = setTimeout(() => {
+      setSessionExpired(true)
+      setSessionWarning(false)
+      window.location.href = '/'
+    }, SESSION_TIMEOUT_MS)
+
+    const events = ['mousedown', 'keydown', 'touchstart']
+    const opts = { passive: true }
+    for (const e of events) window.addEventListener(e, handleActivity, opts)
+
+    return () => {
+      if (warningTimer.current) clearTimeout(warningTimer.current)
+      if (logoutTimer.current) clearTimeout(logoutTimer.current)
+      for (const e of events) window.removeEventListener(e, handleActivity, opts)
+    }
+  }, [isLoggedIn, handleActivity, resetTimers])
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -57,7 +108,6 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   const login = async (userDataOrEmail, passwordOrRole, userRole) => {
-    // Path 1: Standard Email/Password login (This path already works perfectly)
     if (typeof userDataOrEmail === 'string') {
       const profile = await signIn(userDataOrEmail, passwordOrRole, userRole)
       setUser(profile)
@@ -66,10 +116,8 @@ export const AuthProvider = ({ children }) => {
       return profile
     }
 
-    // Path 2: The Object Bypass (Where the data was getting lost!)
     const userData = userDataOrEmail || {}
     
-    // ✨ THE FIX: Force the context to fetch the custom Strathmore fields from Firestore
     if (userData.uid) {
       const fullProfile = await getUserProfile(userData.uid)
       if (fullProfile) {
@@ -80,7 +128,6 @@ export const AuthProvider = ({ children }) => {
       }
     }
 
-    // Absolute Fallback
     setUser(userData)
     setRole(passwordOrRole || userData.role || null)
     setIsLoggedIn(true)
@@ -102,21 +149,34 @@ export const AuthProvider = ({ children }) => {
     setRole(null)
     setPendingVerification(false)
     setIsLoggedIn(false)
+    setSessionExpired(false)
+    setSessionWarning(false)
+  }
+
+  const dismissSessionExpired = () => {
+    setSessionExpired(false)
+    resetTimers()
   }
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1e', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}></div>
-          <div className="text-txs" style={{ fontSize: 13, fontFamily: 'Sora, system-ui, sans-serif' }}>Loading StrathEats...</div>
+      <div className="auth-loading-overlay">
+        <div className="auth-loading-content">
+          <div className="auth-loading-spinner"></div>
+          <div className="auth-loading-text">Loading StrathEats...</div>
         </div>
       </div>
     )
   }
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, user, role, pendingVerification, login, register, logout }}>
+    <AuthContext.Provider value={{
+      isLoggedIn: isLoggedIn && !sessionExpired,
+      user, role, pendingVerification,
+      login, register, logout,
+      sessionExpired, sessionWarning,
+      dismissSessionExpired,
+    }}>
       {children}
     </AuthContext.Provider>
   )
