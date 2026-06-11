@@ -16,8 +16,9 @@ import {
   BarChart, Bar, LineChart, Line, PieChart, Pie,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts'
+import '../../styles/vendor.css'
 
-//  Constants 
+//  Constants
 const COLORS = ['#f0b429', '#f7c948', '#fde68a', '#fb923c', '#a78bfa']
 
 const STATUS_CFG = {
@@ -33,16 +34,14 @@ const STATUS_CFG = {
 function useToastLocal() {
   const [toasts, setToasts] = useState([])
   const add = (msg, type = 'info') => {
-    // Combine the timestamp with a random number to guarantee uniqueness
     const id = `${Date.now()}-${Math.random()}`
-    
     setToasts(p => [...p, { id, msg, type }])
     setTimeout(() => setToasts(p => p.filter(t => t.id !== id)), 4000)
   }
   return { toasts, add }
 }
 
-//  Sidebar 
+//  Sidebar
 const NAV = [
   { key: 'orders',    label: 'Orders Queue' },
   { key: 'menu',      label: 'My Menu' },
@@ -61,10 +60,10 @@ function Sidebar({ tab, setTab, user, pendingCount, onSignOut, sidebarOpen }) {
   return (
     <div className={`dash-sidebar${sidebarOpen ? ' open' : ''}`} style={{ width: 200 }}>
       <div className="dash-logo-area">
-        <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>
-          Strath<em style={{ color: '#f0b429', fontStyle: 'normal' }}>Eats</em>
+        <div className="vendor-sidebar-logo">
+          Strath<em>Eats</em>
         </div>
-        <div style={{ fontSize: 9, color: '#475569', marginTop: 3, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+        <div className="vendor-role-text">
           Vendor Portal
         </div>
       </div>
@@ -76,8 +75,6 @@ function Sidebar({ tab, setTab, user, pendingCount, onSignOut, sidebarOpen }) {
             key={item.key}
             onClick={() => setTab(item.key)}
             className={`dash-nav-item ${tab === item.key ? 'active' : ''}`}
-            onMouseEnter={e => { if (tab !== item.key) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
-            onMouseLeave={e => { if (tab !== item.key) e.currentTarget.style.background = 'transparent' }}
           >
             <span style={{ flex: 1 }}>{item.label}</span>
             {item.key === 'orders' && pendingCount > 0 && (
@@ -89,19 +86,17 @@ function Sidebar({ tab, setTab, user, pendingCount, onSignOut, sidebarOpen }) {
 
       <div className="dash-user-area">
         <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 10px', marginBottom: 6 }}>
-          <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#f0b429', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#0a0f1e', flexShrink: 0 }}>
+          <div className="vendor-user-avatar">
             {initials}
           </div>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#fff' }}>{displayName}</div>
-            <div style={{ fontSize: 9, color: '#475569' }}>Stall vendor</div>
+            <div className="vendor-user-name">{displayName}</div>
+            <div className="vendor-user-role-text">Stall vendor</div>
           </div>
         </div>
         <button
           onClick={onSignOut}
           className="dash-signout-btn"
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(248,113,113,0.08)'; e.currentTarget.style.color = '#f87171' }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b' }}
         >
            Sign out
         </button>
@@ -110,31 +105,20 @@ function Sidebar({ tab, setTab, user, pendingCount, onSignOut, sidebarOpen }) {
   )
 }
 
-//  Toggle switch 
+//  Toggle switch
 function Toggle({ on, onToggle }) {
   return (
     <div
       onClick={onToggle}
-      style={{
-        width: 40, height: 22, borderRadius: 99, cursor: 'pointer',
-        background: on ? '#f0b429' : 'rgba(255,255,255,0.1)',
-        position: 'relative', transition: 'all 0.2s', flexShrink: 0,
-      }}
-    >
-      <div style={{
-        position: 'absolute', top: 3,
-        left: on ? 21 : 3,
-        width: 16, height: 16, borderRadius: '50%',
-        background: '#fff', transition: 'all 0.2s',
-      }} />
-    </div>
+      className={`toggle ${on ? 'on' : 'off'}`}
+    />
   )
 }
 
-//  Main 
+//  Main
 export default function VendorDashboard() {
   const navigate = useNavigate()
-  const { isLoggedIn, logout, user } = useAuth()
+  const { isLoggedIn, logout, user, sessionWarning } = useAuth()
   const { toasts, add: addToast } = useToastLocal()
 
   const [tab, setTab]           = useState('orders')
@@ -149,6 +133,12 @@ export default function VendorDashboard() {
   const [loadingStall, setLoadingStall] = useState(true)
   const [firestoreError, setFirestoreError] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  useEffect(() => {
+    if (sessionWarning) {
+      addToast(sessionWarning, 'warning')
+    }
+  }, [sessionWarning])
 
   const getVendorDraftKey = (id) => `stratheats:vendor-stall:${id}`
 
@@ -167,7 +157,6 @@ export default function VendorDashboard() {
     try {
       window.localStorage.setItem(getVendorDraftKey(id), JSON.stringify({ ...payload, id }))
     } catch {
-      // Ignore storage quota / privacy mode failures and rely on Firestore.
     }
   }
 
@@ -265,7 +254,7 @@ export default function VendorDashboard() {
     }
   }
 
-  // â”€â”€ Computed (hooks must run before any conditional returns) â”€â”€
+  //  Computed
   const pendingCount = orders.filter(o => o.st === 'paid').length
 
   const categoryOptions = useMemo(() => {
@@ -304,7 +293,8 @@ export default function VendorDashboard() {
       </div>
     )
   }
-  //  Handlers 
+
+  //  Handlers
 
   const handleConfirm  = async id => { setOrders(p => p.map(o => o.id===id ? {...o, st:'accepted', rm:true} : o)); await updateOrderStatus(id, 'accepted'); addToast('Order confirmed','success') }
   const handleReject   = async id => { setOrders(p => p.map(o => o.id===id ? {...o, st:'cancelled'} : o)); await updateOrderStatus(id, 'cancelled'); addToast('Order cancelled','error') }
@@ -357,32 +347,13 @@ export default function VendorDashboard() {
     addToast('Settings saved ','success')
   }
 
-  //  Styles 
-  const cardStyle = {
-    background: '#141d35',
-    border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: 16,
-    padding: 20,
-  }
-  const inputStyle = {
-    width: '100%', padding: '10px 13px',
-    background: '#0f1729', border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: 10, fontSize: 12, color: '#e2e8f0',
-    fontFamily: 'Sora, system-ui, sans-serif', outline: 'none',
-  }
-  const labelStyle = {
-    display: 'block', fontSize: 10, fontWeight: 700,
-    textTransform: 'uppercase', letterSpacing: '0.06em',
-    color: '#64748b', marginBottom: 6,
-  }
-
-  //  Render tabs 
+  //  Render tabs
   const renderOrders = () => (
     <div>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: 20 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>Orders Queue</h1>
+      <div className="vendor-orders-header">
+        <h1 className="vendor-orders-title">Orders Queue</h1>
         <div style={{ display:'flex', alignItems:'center', gap: 10 }}>
-          <span style={{ fontSize: 11, color: '#64748b' }}>Stall status:</span>
+          <span className="vendor-stall-status-label">Stall status:</span>
           <Toggle on={stallOnline} onToggle={() => {
             const nextOnline = !stallOnline
             setStallOnline(nextOnline)
@@ -397,78 +368,63 @@ export default function VendorDashboard() {
             })
             addToast(nextOnline ? 'Stall is now Open ' : 'Stall set to Closed', 'info')
           }} />
-          <span style={{ fontSize: 11, fontWeight: 700, color: stallOnline ? '#4ade80' : '#f87171' }}>
+          <span className={`vendor-stall-status-indicator ${stallOnline ? 'open' : 'closed'}`}>
             {stallOnline ? 'Open' : 'Closed'}
           </span>
         </div>
       </div>
 
       {orders.length === 0 ? (
-        <div style={{ ...cardStyle, textAlign:'center', padding: '48px 0' }}>
+        <div className="card vendor-orders-empty">
           <div style={{ fontSize: 36, marginBottom: 10 }}></div>
-          <div style={{ color: '#64748b', fontSize: 13 }}>All caught up - no pending orders</div>
+          <div className="vendor-orders-empty-text">All caught up - no pending orders</div>
         </div>
       ) : (
         <div style={{ display:'flex', flexDirection:'column', gap: 12 }}>
           {orders.map(order => {
             const st = STATUS_CFG[order.st] || STATUS_CFG.paid
             return (
-              <div key={order.id} style={{ ...cardStyle, borderLeft: `3px solid ${st.color}` }}>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom: 12 }}>
+              <div key={order.id} className="card" style={{ borderLeft: `3px solid ${st.color}` }}>
+                <div className="vendor-order-header">
                   <div>
-                    <div style={{ fontWeight: 700, color: '#fff', fontSize: 15 }}>{order.user}</div>
-                    <div style={{ fontSize: 10, color: '#475569', fontFamily: 'monospace', marginTop: 2 }}>{order.id}</div>
+                    <div className="vendor-order-customer">{order.user}</div>
+                    <div className="vendor-order-id">{order.id}</div>
                   </div>
                   <div style={{ display:'flex', alignItems:'center', gap: 10 }}>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: '#f0b429' }}>KES {order.tot}</div>
-                    <span style={{ background: st.bg, color: st.color, fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 99 }}>
+                    <div className="vendor-order-amount">KES {order.tot}</div>
+                    <span className="vendor-order-status" style={{ background: st.bg, color: st.color }}>
                       {st.label}
                     </span>
                   </div>
                 </div>
 
-                {/* Items */}
-                <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: '10px 12px', marginBottom: 12 }}>
+                <div className="vendor-order-items-box">
                   {order.items.map((item,i) => (
-                    <div key={i} style={{ fontSize: 12, color: '#94a3b8', paddingBottom: i < order.items.length - 1 ? 4 : 0 }}>
-                  • {item?.qty || 1}x {item?.nm || (typeof item === 'string' ? item : 'Unknown Item')} 
-                  {item?.pr ? <span style={{ color: '#64748b', fontSize: 11 }}> — KES {item.pr * (item.qty || 1)}</span> : null}
+                    <div key={i} className="vendor-order-item" style={{ paddingBottom: i < order.items.length - 1 ? 4 : 0 }}>
+                  • {item?.qty || 1}x {item?.nm || (typeof item === 'string' ? item : 'Unknown Item')}
+                  {item?.pr ? <span className="vendor-order-item-price"> — KES {item.pr * (item.qty || 1)}</span> : null}
                 </div>
                   ))}
                 </div>
 
-                <div style={{ display:'flex', gap: 16, fontSize: 11, color: '#64748b', marginBottom: 14 }}>
+                <div className="vendor-order-meta">
                   <span>{order.mode === 'Dine-in' ? '' : ''} {order.mode}</span>
                   <span>Pickup {order.pu}</span>
                 </div>
 
-                <div style={{ display:'flex', gap: 8, flexWrap:'wrap' }}>
+                <div className="vendor-actions">
                   {order.st === 'paid' && <>
-                    <button onClick={() => handleConfirm(order.id)} style={{ padding:'7px 16px', borderRadius: 8, border:'none', cursor:'pointer', background:'rgba(74,222,128,0.15)', color:'#4ade80', fontFamily:'Sora,system-ui,sans-serif', fontSize:11, fontWeight:700, transition:'all 0.13s' }}
-                      onMouseEnter={e=>e.currentTarget.style.background='rgba(74,222,128,0.25)'}
-                      onMouseLeave={e=>e.currentTarget.style.background='rgba(74,222,128,0.15)'}
-                    > Confirm</button>
-                    <button onClick={() => handleReject(order.id)} style={{ padding:'7px 16px', borderRadius: 8, border:'none', cursor:'pointer', background:'rgba(248,113,113,0.15)', color:'#f87171', fontFamily:'Sora,system-ui,sans-serif', fontSize:11, fontWeight:700, transition:'all 0.13s' }}
-                      onMouseEnter={e=>e.currentTarget.style.background='rgba(248,113,113,0.25)'}
-                      onMouseLeave={e=>e.currentTarget.style.background='rgba(248,113,113,0.15)'}
-                    > Cancel</button>
+                    <button onClick={() => handleConfirm(order.id)} className="btn-sm btn-confirm"> Confirm</button>
+                    <button onClick={() => handleReject(order.id)} className="btn-sm btn-reject"> Cancel</button>
                   </>}
                   {order.st === 'accepted' && order.rm && (
-                    <button onClick={() => handlePreparing(order.id)} style={{ padding:'7px 16px', borderRadius: 8, border:'none', cursor:'pointer', background:'rgba(96,165,250,0.15)', color:'#60a5fa', fontFamily:'Sora,system-ui,sans-serif', fontSize:11, fontWeight:700, transition:'all 0.13s' }}
-                      onMouseEnter={e=>e.currentTarget.style.background='rgba(96,165,250,0.25)'}
-                      onMouseLeave={e=>e.currentTarget.style.background='rgba(96,165,250,0.15)'}
-                    > Prepare</button>
+                    <button onClick={() => handlePreparing(order.id)} className="vendor-action-btn prepare"> Prepare</button>
                   )}
                   {order.st === 'preparing' && (
-                    <button onClick={() => handleReady(order.id)} style={{ padding:'7px 16px', borderRadius: 8, border:'none', cursor:'pointer', background:'rgba(240,180,41,0.15)', color:'#f0b429', fontFamily:'Sora,system-ui,sans-serif', fontSize:11, fontWeight:700, transition:'all 0.13s' }}
-                      onMouseEnter={e=>e.currentTarget.style.background='rgba(240,180,41,0.25)'}
-                      onMouseLeave={e=>e.currentTarget.style.background='rgba(240,180,41,0.15)'}
-                    > Mark Ready</button>
+                    <button onClick={() => handleReady(order.id)} className="btn-sm btn-ready"> Mark Ready</button>
                   )}
                   {order.st === 'ready' && (
-                    <button onClick={() => handleCollected(order.id)} style={{ padding:'7px 16px', borderRadius: 8, border:'none', cursor:'pointer', background:'rgba(148,163,184,0.1)', color:'#94a3b8', fontFamily:'Sora,system-ui,sans-serif', fontSize:11, fontWeight:700 }}>
-                       Mark Collected
-                    </button>
+                    <button onClick={() => handleCollected(order.id)} className="vendor-action-btn collected"> Mark Collected</button>
                   )}
                 </div>
               </div>
@@ -482,25 +438,25 @@ export default function VendorDashboard() {
   const renderMenu = () => (
     <div>
       <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 20, letterSpacing:'-0.02em' }}>My Menu</h1>
-      <div className="vendor-menu-grid" style={{ display:'grid', gridTemplateColumns:'1fr 280px', gap: 20, alignItems:'start' }}>
+      <div className="vendor-menu-grid">
         {/* Items list */}
-        <div style={{ display:'flex', flexDirection:'column', gap: 8 }}>
+        <div className="vendor-menu-list">
           {menuItems.map(item => (
-            <div key={item.id} style={{ ...cardStyle, display:'flex', alignItems:'center', gap: 14, borderLeft: `3px solid ${item.av ? '#4ade80' : '#f87171'}` }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, color: '#fff', fontSize: 13 }}>{item.nm}</div>
-                <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{item.cat}</div>
+            <div key={item.id} className="vendor-menu-item" style={{ borderLeft: `3px solid ${item.av ? '#4ade80' : '#f87171'}` }}>
+              <div className="vendor-menu-item-info">
+                <div className="vendor-menu-item-name">{item.nm}</div>
+                <div className="vendor-menu-item-cat">{item.cat}</div>
                 {item.portions ? (
-                  <div style={{ fontSize: 11, color: '#f0b429', marginTop: 4 }}>
+                  <div className="vendor-menu-item-portion">
                     Half KES {item.portions.half} - Full KES {item.portions.full}
                   </div>
                 ) : (
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#f0b429', marginTop: 4 }}>KES {item.pr}</div>
+                  <div className="vendor-menu-item-price">KES {item.pr}</div>
                 )}
               </div>
-              <div style={{ display:'flex', alignItems:'center', gap: 10 }}>
+              <div className="vendor-menu-item-actions">
                 <div style={{ display:'flex', alignItems:'center', gap: 7 }}>
-                  <span style={{ fontSize: 10, color: item.av ? '#4ade80' : '#f87171', fontWeight: 600 }}>
+                  <span className="vendor-menu-toggle-label" style={{ color: item.av ? '#4ade80' : '#f87171' }}>
                     {item.av ? 'Available' : 'Out'}
                   </span>
                   <Toggle on={item.av} onToggle={() => {
@@ -532,9 +488,7 @@ export default function VendorDashboard() {
                     })
                     addToast('Item removed','info')
                   }}
-                  style={{ width:28, height:28, borderRadius:'50%', border:'none', cursor:'pointer', background:'rgba(248,113,113,0.12)', color:'#f87171', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.13s' }}
-                  onMouseEnter={e=>e.currentTarget.style.background='rgba(248,113,113,0.25)'}
-                  onMouseLeave={e=>e.currentTarget.style.background='rgba(248,113,113,0.12)'}
+                  className="vendor-menu-delete-btn"
                 ></button>
               </div>
             </div>
@@ -542,53 +496,50 @@ export default function VendorDashboard() {
         </div>
 
         {/* Add item form */}
-        <div style={{ ...cardStyle, position:'sticky', top:24 }}>
-          <div style={{ fontWeight: 700, color: '#fff', fontSize: 14, marginBottom: 16 }}>Add New Item</div>
-          <form onSubmit={handleAddItem} style={{ display:'flex', flexDirection:'column', gap: 12 }}>
+        <div className="vendor-add-form">
+          <div className="vendor-add-form-title">Add New Item</div>
+          <form onSubmit={handleAddItem} className="vendor-add-form-fields">
             <div>
-              <label style={labelStyle}>Dish name</label>
-              <input style={inputStyle} placeholder="e.g. Pilau" value={newItem.nm} onChange={e=>setNewItem({...newItem,nm:e.target.value})} />
+              <label className="form-label">Dish name</label>
+              <input className="form-input" placeholder="e.g. Pilau" value={newItem.nm} onChange={e=>setNewItem({...newItem,nm:e.target.value})} />
             </div>
 
             {/* Portion toggle */}
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 0', borderTop:'1px solid rgba(255,255,255,0.06)', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
+            <div className="vendor-portion-toggle">
               <div>
-                <div style={{ fontSize:12, fontWeight:600, color:'#e2e8f0' }}>Has portions?</div>
-                <div style={{ fontSize:10, color:'#64748b' }}>Half & full sizing</div>
+                <div className="vendor-portion-label">Has portions?</div>
+                <div className="vendor-portion-hint">Half & full sizing</div>
               </div>
               <Toggle on={newItem.hasPortions} onToggle={()=>setNewItem({...newItem, hasPortions:!newItem.hasPortions})} />
             </div>
 
             {!newItem.hasPortions ? (
               <div>
-                <label style={labelStyle}>Price (KES)</label>
-                <input style={inputStyle} type="number" placeholder="e.g. 120" value={newItem.pr} onChange={e=>setNewItem({...newItem,pr:e.target.value})} />
+                <label className="form-label">Price (KES)</label>
+                <input className="form-input" type="number" placeholder="e.g. 120" value={newItem.pr} onChange={e=>setNewItem({...newItem,pr:e.target.value})} />
               </div>
             ) : (
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap: 8 }}>
+              <div className="vendor-portion-grid">
                 <div>
-                  <label style={labelStyle}>Half (KES)</label>
-                  <input style={inputStyle} type="number" placeholder="60" value={newItem.halfPr} onChange={e=>setNewItem({...newItem,halfPr:e.target.value})} />
+                  <label className="form-label">Half (KES)</label>
+                  <input className="form-input" type="number" placeholder="60" value={newItem.halfPr} onChange={e=>setNewItem({...newItem,halfPr:e.target.value})} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Full (KES)</label>
-                  <input style={inputStyle} type="number" placeholder="120" value={newItem.fullPr} onChange={e=>setNewItem({...newItem,fullPr:e.target.value})} />
+                  <label className="form-label">Full (KES)</label>
+                  <input className="form-input" type="number" placeholder="120" value={newItem.fullPr} onChange={e=>setNewItem({...newItem,fullPr:e.target.value})} />
                 </div>
               </div>
             )}
 
             <div>
-              <label style={labelStyle}>Category</label>
-              <select style={{ ...inputStyle, cursor:'pointer' }} value={newItem.cat} onChange={e=>setNewItem({...newItem,cat:e.target.value})}>
+              <label className="form-label">Category</label>
+              <select className="form-select" value={newItem.cat} onChange={e=>setNewItem({...newItem,cat:e.target.value})}>
                 <option value="" disabled>Select category</option>
                 {categoryOptions.map(c=><option key={c} value={c}>{c}</option>)}
               </select>
             </div>
 
-            <button type="submit" style={{ width:'100%', padding:'11px', borderRadius:10, background:'#f0b429', color:'#0a0f1e', border:'none', cursor:'pointer', fontSize:13, fontWeight:700, fontFamily:'Sora,system-ui,sans-serif', transition:'all 0.13s' }}
-              onMouseEnter={e=>e.currentTarget.style.background='#f7c948'}
-              onMouseLeave={e=>e.currentTarget.style.background='#f0b429'}
-            >+ Add to menu</button>
+            <button type="submit" className="vendor-submit-btn">+ Add to menu</button>
           </form>
         </div>
       </div>
@@ -599,36 +550,36 @@ export default function VendorDashboard() {
     <div>
       <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 20, letterSpacing:'-0.02em' }}>Analytics</h1>
       {/* KPI row */}
-      <div className="vendor-kpi-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap: 12, marginBottom: 20 }}>
+      <div className="vendor-kpi-grid">
         {[
-          { 
-    label: "Today's Revenue", 
-    value: formatCurrency(analyticsSummary?.todayRevenue || 0), 
-    color: '#f0b429' 
+          {
+    label: "Today's Revenue",
+    value: formatCurrency(analyticsSummary?.todayRevenue || 0),
+    color: '#f0b429'
   },
-  { 
-    label: 'Total Orders',     
-    value: String(analyticsSummary?.totalOrders || 0),        
-    color: '#60a5fa' 
+  {
+    label: 'Total Orders',
+    value: String(analyticsSummary?.totalOrders || 0),
+    color: '#60a5fa'
   },
-  { 
-    label: 'Avg Order Value',  
-    value: formatCurrency(analyticsSummary?.averageOrderValue || 0),   
-    color: '#4ade80' 
+  {
+    label: 'Avg Order Value',
+    value: formatCurrency(analyticsSummary?.averageOrderValue || 0),
+    color: '#4ade80'
   }
         ].map((k,i)=>(
-          <div key={i} style={{ ...cardStyle, display:'flex', alignItems:'center', gap: 14 }}>
+          <div key={i} className="vendor-kpi-card">
             <div>
-              <div style={{ fontSize: 10, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.06em', fontWeight:700, marginBottom:4 }}>{k.label}</div>
-              <div style={{ fontSize: 22, fontWeight:700, color: k.color }}>{k.value}</div>
+              <div className="vendor-kpi-label">{k.label}</div>
+              <div className="vendor-kpi-value" style={{ color: k.color }}>{k.value}</div>
             </div>
           </div>
         ))}
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap: 16 }}>
-        <div style={cardStyle}>
-          <div style={{ fontWeight:700, color:'#fff', fontSize:13, marginBottom:14 }}>Weekly Revenue (KES)</div>
+      <div className="vendor-analytics-grid">
+        <div className="vendor-chart-card">
+          <div className="vendor-chart-title">Weekly Revenue (KES)</div>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={weeklyRevenue}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
@@ -640,8 +591,8 @@ export default function VendorDashboard() {
           </ResponsiveContainer>
         </div>
 
-        <div style={cardStyle}>
-          <div style={{ fontWeight:700, color:'#fff', fontSize:13, marginBottom:14 }}>Orders by Hour</div>
+        <div className="vendor-chart-card">
+          <div className="vendor-chart-title">Orders by Hour</div>
           <ResponsiveContainer width="100%" height={240}>
             <LineChart data={ordersByHour}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
@@ -653,8 +604,8 @@ export default function VendorDashboard() {
           </ResponsiveContainer>
         </div>
 
-        <div style={cardStyle}>
-          <div style={{ fontWeight:700, color:'#fff', fontSize:13, marginBottom:14 }}>Top Items</div>
+        <div className="vendor-chart-card">
+          <div className="vendor-chart-title">Top Items</div>
           <ResponsiveContainer width="100%" height={240}>
             <PieChart>
               <Pie data={topItems} cx="50%" cy="50%" outerRadius={90} dataKey="sales"
@@ -667,16 +618,16 @@ export default function VendorDashboard() {
           </ResponsiveContainer>
         </div>
 
-        <div style={cardStyle}>
-          <div style={{ fontWeight:700, color:'#fff', fontSize:13, marginBottom:14 }}>Top Items Ranked</div>
+        <div className="vendor-chart-card">
+          <div className="vendor-chart-title">Top Items Ranked</div>
           {topItems.map((item,i)=>(
-            <div key={i} style={{ marginBottom:10 }}>
-              <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:5 }}>
-                <span style={{ color:'#e2e8f0', fontWeight:600 }}>{item.name}</span>
-                <span style={{ color:'#64748b' }}>{item.sales} orders</span>
+            <div key={i} className="vendor-top-item">
+              <div className="vendor-top-item-header">
+                <span className="vendor-top-item-name">{item.name}</span>
+                <span className="vendor-top-item-sales">{item.sales} orders</span>
               </div>
-              <div style={{ height:6, borderRadius:99, background:'rgba(255,255,255,0.06)', overflow:'hidden' }}>
-                <div style={{ height:'100%', borderRadius:99, background:'#f0b429', width:`${(item.sales/(topItems[0]?.sales||1))*100}%`, transition:'width 0.4s' }} />
+              <div className="vendor-top-item-bar-bg">
+                <div className="vendor-top-item-bar" style={{ width:`${(item.sales/(topItems[0]?.sales||1))*100}%` }} />
               </div>
             </div>
           ))}
@@ -688,18 +639,18 @@ export default function VendorDashboard() {
   const renderSettings = () => (
     <div>
       <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 4, letterSpacing:'-0.02em' }}>Stall Settings</h1>
-      {savedAt && <div style={{ fontSize:11, color:'#4ade80', marginBottom: 16 }}> Last saved today at {savedAt}</div>}
-      {!savedAt && <div style={{ fontSize:11, color:'#475569', marginBottom: 16 }}>Configure how your stall appears to students</div>}
+      {savedAt && <div className="vendor-saved-at"> Last saved today at {savedAt}</div>}
+      {!savedAt && <div className="vendor-unsaved-hint">Configure how your stall appears to students</div>}
 
-      <div className="vendor-settings-grid" style={{ display:'grid', gridTemplateColumns:'1fr 300px', gap: 20, alignItems:'start' }}>
+      <div className="vendor-settings-grid">
         {/* Form */}
-        <div style={{ display:'flex', flexDirection:'column', gap: 14 }}>
+        <div className="vendor-settings-form">
 
           {/* Online toggle */}
-          <div style={{ ...cardStyle, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <div className="vendor-settings-card vendor-settings-status-row">
             <div>
-              <div style={{ fontWeight:700, color:'#fff', fontSize:13 }}>Stall Status</div>
-              <div style={{ fontSize:11, color:'#64748b', marginTop:3 }}>Students can only order when your stall is open</div>
+              <div className="vendor-settings-status-label">Stall Status</div>
+              <div className="vendor-settings-status-hint">Students can only order when your stall is open</div>
             </div>
             <div style={{ display:'flex', alignItems:'center', gap: 10 }}>
               <span style={{ fontSize:11, fontWeight:700, color: stallOnline ? '#4ade80' : '#f87171' }}>
@@ -722,21 +673,22 @@ export default function VendorDashboard() {
           </div>
 
           {/* Basic info */}
-          <div style={cardStyle}>
-            <div style={{ fontWeight:700, color:'#fff', fontSize:13, marginBottom:16 }}>Basic Info</div>
+          <div className="vendor-settings-card">
+            <div className="vendor-settings-card-title">Basic Info</div>
             <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
               <div>
-                <label style={labelStyle}>Stall Name</label>
-                <input style={inputStyle} value={stallSettings.name} onChange={e=>setStallSettings({...stallSettings,name:e.target.value})} />
+                <label className="form-label">Stall Name</label>
+                <input className="form-input" value={stallSettings.name} onChange={e=>setStallSettings({...stallSettings,name:e.target.value})} />
               </div>
               <div>
-                <label style={labelStyle}>Category / Cuisine type</label>
-                <input style={inputStyle} placeholder="e.g. Local meals & stews" value={stallSettings.cat} onChange={e=>setStallSettings({...stallSettings,cat:e.target.value})} />
+                <label className="form-label">Category / Cuisine type</label>
+                <input className="form-input" placeholder="e.g. Local meals & stews" value={stallSettings.cat} onChange={e=>setStallSettings({...stallSettings,cat:e.target.value})} />
               </div>
               <div>
-                <label style={labelStyle}>Short description (shown to students)</label>
+                <label className="form-label">Short description (shown to students)</label>
                 <textarea
-                  style={{ ...inputStyle, resize:'none', height:72 }}
+                  className="form-input"
+                  style={{ resize:'none', height:72 }}
                   placeholder="e.g. Home-style Kenyan meals made fresh daily."
                   value={stallSettings.desc}
                   onChange={e=>setStallSettings({...stallSettings,desc:e.target.value})}
@@ -748,49 +700,45 @@ export default function VendorDashboard() {
           {/* Emoji picker */}
 
           {/* Hours */}
-          <div style={cardStyle}>
-            <div style={{ fontWeight:700, color:'#fff', fontSize:13, marginBottom:16 }}>Opening Hours</div>
+          <div className="vendor-settings-card">
+            <div className="vendor-settings-card-title">Opening Hours</div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
               <div>
-                <label style={labelStyle}>Opens at</label>
-                <input type="time" style={inputStyle} value={stallSettings.openTime} onChange={e=>setStallSettings({...stallSettings,openTime:e.target.value})} />
+                <label className="form-label">Opens at</label>
+                <input type="time" className="form-input" value={stallSettings.openTime} onChange={e=>setStallSettings({...stallSettings,openTime:e.target.value})} />
               </div>
               <div>
-                <label style={labelStyle}>Closes at</label>
-                <input type="time" style={inputStyle} value={stallSettings.closeTime} onChange={e=>setStallSettings({...stallSettings,closeTime:e.target.value})} />
+                <label className="form-label">Closes at</label>
+                <input type="time" className="form-input" value={stallSettings.closeTime} onChange={e=>setStallSettings({...stallSettings,closeTime:e.target.value})} />
               </div>
             </div>
           </div>
 
           {/* Payment */}
-          <div style={cardStyle}>
-            <div style={{ fontWeight:700, color:'#fff', fontSize:13, marginBottom:4 }}>Payment</div>
-            <div style={{ fontSize:11, color:'#64748b', marginBottom:12 }}>Student payments are sent to this M-Pesa number</div>
+          <div className="vendor-settings-card">
+            <div className="vendor-settings-section-title">Payment</div>
+            <div className="vendor-settings-section-desc">Student payments are sent to this M-Pesa number</div>
             <div>
-              <label style={labelStyle}>M-Pesa Till / Paybill</label>
-              <input style={inputStyle} placeholder="e.g. 522522" value={stallSettings.mpesa} onChange={e=>setStallSettings({...stallSettings,mpesa:e.target.value})} />
+              <label className="form-label">M-Pesa Till / Paybill</label>
+              <input className="form-input" placeholder="e.g. 522522" value={stallSettings.mpesa} onChange={e=>setStallSettings({...stallSettings,mpesa:e.target.value})} />
             </div>
           </div>
 
           {/* Save */}
           <button
             onClick={handleSaveSettings}
-            style={{ padding:'13px', borderRadius:12, background:'#f0b429', color:'#0a0f1e', border:'none', cursor:'pointer', fontSize:13, fontWeight:700, fontFamily:'Sora,system-ui,sans-serif', transition:'all 0.15s' }}
-            onMouseEnter={e=>{ e.currentTarget.style.background='#f7c948'; e.currentTarget.style.boxShadow='0 6px 20px rgba(240,180,41,0.3)' }}
-            onMouseLeave={e=>{ e.currentTarget.style.background='#f0b429'; e.currentTarget.style.boxShadow='none' }}
+            className="vendor-settings-save-btn"
           >
             Save changes
           </button>
 
           {/* Danger zone */}
-          <div style={{ ...cardStyle, border:'1px solid rgba(248,113,113,0.2)', marginTop:8 }}>
-            <div style={{ fontWeight:700, color:'#f87171', fontSize:13, marginBottom:4 }}>Danger Zone</div>
-            <div style={{ fontSize:11, color:'#64748b', marginBottom:14 }}>These actions are irreversible. Proceed with caution.</div>
+          <div className="vendor-settings-card vendor-danger-zone">
+            <div className="vendor-danger-title">Danger Zone</div>
+            <div className="vendor-danger-desc">These actions are irreversible. Proceed with caution.</div>
             <button
               onClick={()=>addToast('Contact admin to permanently deactivate your stall','info')}
-              style={{ padding:'9px 18px', borderRadius:9, border:'1px solid rgba(248,113,113,0.3)', background:'rgba(248,113,113,0.07)', color:'#f87171', fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'Sora,system-ui,sans-serif', transition:'all 0.13s' }}
-              onMouseEnter={e=>e.currentTarget.style.background='rgba(248,113,113,0.15)'}
-              onMouseLeave={e=>e.currentTarget.style.background='rgba(248,113,113,0.07)'}
+              className="vendor-danger-btn"
             >
               Deactivate stall
             </button>
@@ -798,23 +746,23 @@ export default function VendorDashboard() {
         </div>
 
         {/* Live preview */}
-        <div style={{ position:'sticky', top:24 }}>
-          <div style={{ fontSize:10, fontWeight:700, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:10 }}>
+        <div className="vendor-preview-section">
+          <div className="vendor-preview-header">
             Live preview
           </div>
-          <div style={{ ...cardStyle, cursor:'default' }}>
-            <div style={{ fontWeight:700, color:'#fff', fontSize:15, marginBottom:4 }}>{stallSettings.name || 'Stall name'}</div>
-            <div style={{ fontSize:11, color:'#64748b', marginBottom:8 }}>{stallSettings.cat || 'Category'}</div>
-            <div style={{ fontSize:11, color:'#94a3b8', marginBottom:12, lineHeight:1.55 }}>{stallSettings.desc || 'No description yet.'}</div>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, color:'#94a3b8' }}>
+          <div className="vendor-preview-card">
+            <div className="vendor-preview-name">{stallSettings.name || 'Stall name'}</div>
+            <div className="vendor-preview-cat">{stallSettings.cat || 'Category'}</div>
+            <div className="vendor-preview-desc">{stallSettings.desc || 'No description yet.'}</div>
+            <div className="vendor-preview-footer">
+              <div className="vendor-preview-hours">
                 <span style={{ width:7, height:7, borderRadius:'50%', background: stallOnline ? '#4ade80' : '#f87171', display:'inline-block', boxShadow: stallOnline ? '0 0 6px #4ade80' : 'none' }}></span>
                 {stallSettings.openTime}-{stallSettings.closeTime}
               </div>
-              <span style={{ fontSize:10, color:'#64748b' }}>{menuItems.filter(i=>i.av).length} items</span>
+              <span className="vendor-preview-items">{menuItems.filter(i=>i.av).length} items</span>
             </div>
           </div>
-          <div style={{ fontSize:10, color:'#475569', marginTop:10, textAlign:'center', lineHeight:1.6 }}>
+          <div className="vendor-preview-hint">
             This is how your stall<br/>appears to students
           </div>
         </div>
@@ -848,4 +796,3 @@ export default function VendorDashboard() {
     </div>
   )
 }
-

@@ -1,17 +1,16 @@
-﻿import { useState, useEffect } from 'react'
+﻿import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
 import { useOrders } from '../../context/OrdersContext'
-// live stalls come from Firestore subscription
 import { subscribeToStalls } from '../../services/stallService'
 import { formatCurrency, formatDate } from '../../utils/formatters'
 import { downloadReceipt } from '../../utils/receipt'
-import { triggerMpesaStkPush } from '../../services/orderservice'
+import { triggerMpesaStkPush, updateOrderStatus } from '../../services/orderservice'
 import { db } from '../../services/firebase'
-import { collection,addDoc} from 'firebase/firestore'
+import { collection, addDoc } from 'firebase/firestore'
+import '../../styles/student.css'
 
-//  Status config 
 const STATUS = {
   pending:   { label: 'Pending Payment', color: '#f87171', bg: 'rgba(248,113,113,0.12)', step: -1 },
   paid:      { label: 'Paid',      color: '#fb923c', bg: 'rgba(251,146,60,0.12)',  step: 0 },
@@ -23,67 +22,47 @@ const STATUS = {
 }
 const STEPS = ['Paid', 'Confirmed', 'Preparing', 'Ready', 'Collected']
 
-//  Tiny toast stack 
-import { useState as useS } from 'react'
 function useToastLocal() {
-  const [toasts, setToasts] = useS([])
-  const add = (msg, type = 'info') => {
+  const [toasts, setToasts] = useState([])
+  const add = useCallback((msg, type = 'info') => {
     const id = Date.now()
     setToasts(p => [...p, { id, msg, type }])
     setTimeout(() => setToasts(p => p.filter(t => t.id !== id)), 4500)
-  }
+  }, [])
   return { toasts, add }
 }
 
-//  Portion selector modal 
 function PortionModal({ item, onSelect, onClose }) {
   const [selected, setSelected] = useState('full')
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-      onClick={onClose}
-    >
-      <div
-        className="rounded-2xl p-6 w-full max-w-xs"
-        style={{ background: '#141d35', border: '1px solid rgba(255,255,255,0.12)' }}
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="text-white font-bold text-base mb-1">{item.nm}</div>
-        <div className="text-xs mb-5" style={{ color: '#94a3b8' }}>Choose your portion size</div>
+    <div className="portion-modal-overlay" onClick={onClose}>
+      <div className="portion-modal-box" onClick={e => e.stopPropagation()}>
+        <div className="portion-modal-title">{item.nm}</div>
+        <div className="portion-modal-hint">Choose your portion size</div>
 
-        <div className="flex gap-3 mb-5">
+        <div className="portion-options">
           {['half', 'full'].map(p => (
             <button
               key={p}
               onClick={() => setSelected(p)}
-              className="flex-1 rounded-xl py-4 transition-all duration-150 text-center"
-              style={{
-                border: selected === p ? '1.5px solid #f0b429' : '1.5px solid rgba(255,255,255,0.1)',
-                background: selected === p ? 'rgba(240,180,41,0.08)' : 'rgba(255,255,255,0.03)',
-                cursor: 'pointer',
-              }}
+              className={`portion-option${selected === p ? ' selected' : ''}`}
             >
               <div className="text-lg mb-1">{p === 'half' ? '' : ''}</div>
-              <div className="font-bold text-white text-sm capitalize">{p}</div>
-              <div className="font-bold text-sm mt-1" style={{ color: '#f0b429' }}>
-                KES {item.portions[p]}
-              </div>
+              <div className="portion-option-label">{p}</div>
+              <div className="portion-option-price">KES {item.portions[p]}</div>
             </button>
           ))}
         </div>
 
         <button
           onClick={() => onSelect(item, selected)}
-          className="w-full py-3 rounded-xl font-bold text-sm transition-all duration-150"
-          style={{ background: '#f0b429', color: '#0a0f1e', border: 'none', cursor: 'pointer' }}
+          className="portion-add-btn"
         >
           Add to cart 
         </button>
         <button
           onClick={onClose}
-          className="w-full py-2 mt-2 text-xs font-medium transition-all duration-150"
-          style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer' }}
+          className="portion-close-btn"
         >
           Cancel
         </button>
@@ -92,7 +71,6 @@ function PortionModal({ item, onSelect, onClose }) {
   )
 }
 
-//  Order status tracker 
 function OrderTracker({ step }) {
   return (
     <div className="flex items-center gap-0 my-4">
@@ -136,7 +114,6 @@ function OrderTracker({ step }) {
   )
 }
 
-// User profile card 
 function UserProfile({ user, role }) {
   const initials = user
     ? `${(user.firstName || user.name || 'U')[0]}${(user.lastName || '')[0] || ''}`.toUpperCase()
@@ -148,20 +125,14 @@ function UserProfile({ user, role }) {
   const idLabel = user?.studentId || user?.staffId || user?.id || '-'
 
   return (
-    <div
-      className="rounded-xl p-4 mt-2"
-      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-    >
-      <div className="flex items-center gap-3 mb-3">
-        <div
-          className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
-          style={{ background: '#f0b429', color: '#0a0f1e' }}
-        >
+    <div className="user-profile-card">
+      <div className="user-profile-top">
+        <div className="user-profile-avatar">
           {initials}
         </div>
         <div>
-          <div className="font-bold text-white text-sm leading-tight">{displayName}</div>
-          <div className="text-xs mt-0.5" style={{ color: '#64748b' }}>{roleLabel}</div>
+          <div className="user-profile-display-name">{displayName}</div>
+          <div className="user-profile-role-label">{roleLabel}</div>
         </div>
       </div>
       <div className="space-y-1.5">
@@ -170,9 +141,9 @@ function UserProfile({ user, role }) {
           { label: 'Email', value: user?.email || '-' },
           { label: 'M-Pesa', value: user?.mpesa || '07XX XXX XXX' },
         ].map(({ label, value }) => (
-          <div key={label} className="flex justify-between items-center">
-            <span style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>{label}</span>
-            <span style={{ fontSize: 11, color: '#94a3b8' }}>{value}</span>
+          <div key={label} className="user-profile-detail">
+            <span className="user-profile-detail-label">{label}</span>
+            <span className="user-profile-detail-value">{value}</span>
           </div>
         ))}
       </div>
@@ -180,7 +151,6 @@ function UserProfile({ user, role }) {
   )
 }
 
-//  Sidebar 
 function Sidebar({ tab, setTab, orders, user, role, onSignOut, sidebarOpen, onToggleSidebar }) {
   const pendingCount = orders.filter(o => o.st === 'paid' || o.st === 'accepted' || o.st === 'ready').length
   const navItems = [
@@ -191,17 +161,15 @@ function Sidebar({ tab, setTab, orders, user, role, onSignOut, sidebarOpen, onTo
 
   return (
     <div className={`dash-sidebar${sidebarOpen ? ' open' : ''}`} style={{ width: 200 }}>
-      {/* Logo */}
       <div className="dash-logo-area">
-        <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>
-          Strath<em style={{ color: '#f0b429', fontStyle: 'normal' }}>Eats</em>
+        <div className="student-sidebar-logo">
+          Strath<em>Eats</em>
         </div>
-        <div style={{ fontSize: 9, color: '#475569', marginTop: 3, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+        <div className="student-role-text">
           {role === 'staff' ? 'Staff Portal' : role === 'other' ? 'Guest Portal' : 'Student Portal'}
         </div>
       </div>
 
-      {/* Nav */}
       <nav className="dash-nav">
         <div className="dash-nav-header">Menu</div>
         {navItems.map(item => (
@@ -209,8 +177,6 @@ function Sidebar({ tab, setTab, orders, user, role, onSignOut, sidebarOpen, onTo
             key={item.id}
             onClick={() => setTab(item.id)}
             className={`dash-nav-item ${tab === item.id ? 'active' : ''}`}
-            onMouseEnter={e => { if (tab !== item.id) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
-            onMouseLeave={e => { if (tab !== item.id) e.currentTarget.style.background = 'transparent' }}
           >
             <span style={{ flex: 1 }}>{item.label}</span>
             {item.badge && (
@@ -220,26 +186,19 @@ function Sidebar({ tab, setTab, orders, user, role, onSignOut, sidebarOpen, onTo
         ))}
       </nav>
 
-      {/* User info + sign out */}
       <div className="dash-user-area">
         <button
           onClick={() => setTab('profile')}
           className="dash-user-btn"
-          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
         >
-          <div style={{
-            width: 30, height: 30, borderRadius: '50%', background: '#f0b429',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 11, fontWeight: 700, color: '#0a0f1e', flexShrink: 0,
-          }}>
+          <div className="student-user-avatar">
             {user ? `${(user.firstName || user.name || 'U')[0]}${(user.lastName || '')[0] || ''}`.toUpperCase() : 'U'}
           </div>
           <div style={{ textAlign: 'left' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#fff' }}>
+            <div className="student-user-name">
               {user ? `${user.firstName || user.name || ''} ${user.lastName || ''}`.trim() : 'Student'}
             </div>
-            <div style={{ fontSize: 9, color: '#475569' }}>
+            <div className="student-user-id">
               {user?.studentId || user?.staffId || 'View profile'}
             </div>
           </div>
@@ -247,8 +206,6 @@ function Sidebar({ tab, setTab, orders, user, role, onSignOut, sidebarOpen, onTo
         <button
           onClick={onSignOut}
           className="dash-signout-btn"
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(248,113,113,0.08)'; e.currentTarget.style.color = '#f87171' }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b' }}
         >
           <span></span> Sign out
         </button>
@@ -257,7 +214,6 @@ function Sidebar({ tab, setTab, orders, user, role, onSignOut, sidebarOpen, onTo
   )
 }
 
-//  Menu item card 
 function MenuItem({ item, inCart, onAdd, onPortionAdd }) {
   const hasPortions = !!item.portions
 
@@ -277,147 +233,88 @@ function MenuItem({ item, inCart, onAdd, onPortionAdd }) {
   return (
     <div
       onClick={handleClick}
-      style={{
-        background: inCart ? 'rgba(240,180,41,0.06)' : '#141d35',
-        border: inCart ? '1.5px solid #f0b429' : '1px solid rgba(255,255,255,0.1)',
-        borderLeft: `3px solid ${accent}`,
-        borderRadius: 12,
-        padding: '12px 14px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        cursor: item.av ? 'pointer' : 'default',
-        opacity: item.av ? 1 : 0.35,
-        transition: 'all 0.15s',
-        marginBottom: 8,
-      }}
+      className={`menu-item-card${inCart ? ' in-cart' : ''}${!item.av ? ' unavail' : ''}`}
+      style={{ borderLeft: `3px solid ${accent}` }}
     >
       <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 700, color: '#fff', fontSize: 13 }}>{item.nm}</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-          <span style={{
-            fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99,
-            background: `${accent}20`, color: accent,
-          }}>
+        <div className="menu-item-name">{item.nm}</div>
+        <div className="menu-item-tags">
+          <span className="menu-item-cat-tag" style={{ background: `${accent}20`, color: accent }}>
             {item.cat}
           </span>
           {hasPortions && (
-            <span style={{ fontSize: 9, color: '#64748b' }}>
+            <span className="menu-item-portion-price">
               Half KES {item.portions.half} - Full KES {item.portions.full}
             </span>
           )}
           {!hasPortions && (
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#f0b429' }}>
+            <span className="menu-item-price">
               KES {item.pr}
             </span>
           )}
         </div>
       </div>
-      <div
-        style={{
-          width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: inCart ? '#f0b429' : 'rgba(240,180,41,0.12)',
-          color: inCart ? '#0a0f1e' : '#f0b429',
-          fontSize: 16, fontWeight: 700, transition: 'all 0.15s',
-          border: 'none', cursor: 'pointer',
-        }}
-      >
+      <div className={`menu-item-add-btn${inCart ? ' in-cart' : ''}`}>
         {inCart ? '✓' : '+'}
       </div>
     </div>
   )
 }
 
-//  Cart panel 
 function CartPanel({ cartItems, orderMode, pickupTime, setOrderMode, setPickupTime, removeFromCart, decreaseQty, addToCart, getTotal, onCheckout }) {
   const isEmpty = cartItems.length === 0
   return (
-    <div
-      className="cart-panel"
-      style={{
-        width: 280,
-        background: '#0f1729',
-        border: '1px solid rgba(255,255,255,0.1)',
-        borderRadius: 16,
-        padding: 20,
-        height: 'fit-content',
-        position: 'sticky',
-        top: 24,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 14,
-      }}
-    >
-      <div style={{ fontWeight: 700, color: '#fff', fontSize: 14, borderBottom: '1px solid rgba(255,255,255,0.07)', paddingBottom: 12 }}>
+    <div className="cart-panel cart-panel-inner">
+      <div className="cart-header">
          Your Cart
         {!isEmpty && (
-          <span style={{
-            marginLeft: 8, background: '#f0b429', color: '#0a0f1e',
-            fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 99,
-          }}>
+          <span className="cart-badge">
             {cartItems.reduce((s, i) => s + i.qty, 0)}
           </span>
         )}
       </div>
 
       {isEmpty ? (
-        <div style={{ textAlign: 'center', padding: '20px 0', color: '#475569', fontSize: 12 }}>
+        <div className="cart-empty">
           Add items to get started
         </div>
       ) : (
         <>
-          {/* Items */}
-          <div style={{ maxHeight: 200, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div className="cart-items-list">
             {cartItems.map(item => (
-              <div
-                key={item.cartKey}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: '8px 10px',
-                }}
-              >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div key={item.cartKey} className="cart-item">
+                <div className="cart-item-info">
+                  <div className="cart-item-name">
                     {item.nm}
                   </div>
-                  <div style={{ fontSize: 10, color: '#64748b' }}>KES {item.pr} each</div>
+                  <div className="cart-item-unit">KES {item.pr} each</div>
                 </div>
-                {/* Qty controls */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <div className="cart-qty-controls">
                   <button
                     onClick={() => decreaseQty(item.cartKey)}
-                    style={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)', background: 'none', color: '#94a3b8', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    className="cart-qty-btn sub"
                   >-</button>
-                  <span style={{ fontSize: 11, color: '#fff', fontWeight: 700, minWidth: 14, textAlign: 'center' }}>{item.qty}</span>
+                  <span className="cart-qty-value">{item.qty}</span>
                   <button
                     onClick={() => addToCart(item, item.portion)}
-                    style={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid rgba(240,180,41,0.3)', background: 'rgba(240,180,41,0.1)', color: '#f0b429', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    className="cart-qty-btn add"
                   >+</button>
                 </div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#f0b429', minWidth: 44, textAlign: 'right' }}>
+                <div className="cart-item-total">
                   KES {item.pr * item.qty}
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Order type */}
           <div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 7 }}>Order type</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+            <div className="cart-order-type-label">Order type</div>
+            <div className="cart-order-type-grid">
               {['Dine-in', 'Takeaway'].map(m => (
                 <button
                   key={m}
                   onClick={() => setOrderMode(m)}
-                  style={{
-                    padding: '8px 4px', borderRadius: 9, fontSize: 11, fontWeight: 600,
-                    cursor: 'pointer', textAlign: 'center', transition: 'all 0.13s',
-                    background: orderMode === m ? '#f0b429' : 'rgba(255,255,255,0.04)',
-                    color: orderMode === m ? '#0a0f1e' : '#94a3b8',
-                    border: orderMode === m ? 'none' : '1px solid rgba(255,255,255,0.08)',
-                    fontFamily: 'Sora, system-ui, sans-serif',
-                  }}
+                  className={`cart-order-type-btn${orderMode === m ? ' active' : ''}`}
                 >
                   {m === 'Dine-in' ? '' : ''} {m}
                 </button>
@@ -425,44 +322,28 @@ function CartPanel({ cartItems, orderMode, pickupTime, setOrderMode, setPickupTi
             </div>
           </div>
 
-          {/* Pickup time */}
           <div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 7 }}>Pickup time</div>
+            <div className="cart-pickup-label">Pickup time</div>
             <input
               type="time"
               value={pickupTime}
               onChange={e => setPickupTime(e.target.value)}
               min="08:00" max="17:00"
-              style={{
-                width: '100%', padding: '9px 12px', borderRadius: 10,
-                background: '#141d35', border: '1px solid rgba(255,255,255,0.1)',
-                color: '#e2e8f0', fontSize: 12, fontFamily: 'Sora, system-ui, sans-serif',
-                outline: 'none',
-              }}
+              className="cart-pickup-input"
             />
-            <div style={{ fontSize: 10, color: '#475569', marginTop: 4 }}>
+            <div className="cart-pickup-hint">
               Vendor notifies you when ready
             </div>
           </div>
 
-          {/* Total + pay */}
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <span style={{ fontSize: 13, fontWeight: 500, color: '#94a3b8' }}>Total</span>
-              <span style={{ fontSize: 18, fontWeight: 700, color: '#f0b429' }}>KES {getTotal()}</span>
+          <div className="cart-total-section">
+            <div className="cart-total-row">
+              <span className="cart-total-label">Total</span>
+              <span className="cart-total-amount">KES {getTotal()}</span>
             </div>
             <button
               onClick={onCheckout}
-              style={{
-                width: '100%', padding: '13px', borderRadius: 12,
-                background: '#f0b429', color: '#0a0f1e',
-                border: 'none', cursor: 'pointer',
-                fontSize: 13, fontWeight: 700,
-                fontFamily: 'Sora, system-ui, sans-serif',
-                transition: 'all 0.15s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = '#f7c948'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(240,180,41,0.3)' }}
-              onMouseLeave={e => { e.currentTarget.style.background = '#f0b429'; e.currentTarget.style.boxShadow = 'none' }}
+              className="cart-checkout-btn"
             >
                Pay via M-Pesa
             </button>
@@ -473,10 +354,9 @@ function CartPanel({ cartItems, orderMode, pickupTime, setOrderMode, setPickupTi
   )
 }
 
-// Main component 
 export default function StudentDashboard() {
   const navigate = useNavigate()
-  const { isLoggedIn, logout, user, role } = useAuth()
+  const { isLoggedIn, logout, user, role, sessionWarning } = useAuth()
   const {
     cartItems, selectedStall, orderMode, pickupTime,
     addToCart, removeFromCart, decreaseQty, clearCart,
@@ -493,6 +373,12 @@ export default function StudentDashboard() {
     return () => unsub?.()
   }, [])
 
+  useEffect(() => {
+    if (sessionWarning) {
+      addToast('Your session will expire in 60s due to inactivity', 'warning')
+    }
+  }, [sessionWarning, addToast])
+
   const [tab, setTab] = useState('order')
   const [selectedStallObj, setSelectedStallObj] = useState(null)
   const [portionItem, setPortionItem] = useState(null) // item awaiting portion selection
@@ -503,7 +389,6 @@ export default function StudentDashboard() {
     return null
   }
 
-  // â”€â”€ Handlers â”€â”€
   const handleSelectStall = (stall) => {
     clearCart()
     setSelectedStall(stall.id)
@@ -524,7 +409,6 @@ export default function StudentDashboard() {
     try {
       addToast('Creating order records...', 'info');
 
-      // 1. Call the official context function to write the document into Firestore
       const newOrder = await placeOrder({
         stallId: selectedStallObj.id,
         stallName: selectedStallObj.name,
@@ -536,7 +420,6 @@ export default function StudentDashboard() {
         createdAt: new Date().toISOString()
       });
 
-      
       console.log("Firestore order created successfully with tracking ID:", newOrder.id);
       addToast('STK Push sent to ' + (user?.mpesa || 'your phone') + '...', 'info');
 
@@ -550,7 +433,6 @@ export default function StudentDashboard() {
         order_id: newOrder.id,
       });
 
-      // 3. Clear cart and jump to orders tab
       clearCart();
       setTab('myorders');
 
@@ -560,17 +442,15 @@ export default function StudentDashboard() {
     }
   }
 
-  //  Render tabs 
   const renderOrder = () => (
     <div className="student-order-layout" style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
-      {/* Left: stalls / menu */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#fff', marginBottom: 20, letterSpacing: '-0.02em' }}>
+        <h1 className="page-h1" style={{ marginBottom: 20 }}>
           Order Food
         </h1>
         {!selectedStallObj ? (
           <>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+            <div className="stall-count-header">
               {stalls.length} stalls open
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
@@ -578,21 +458,16 @@ export default function StudentDashboard() {
                 <div
                   key={stall.id}
                   onClick={() => handleSelectStall(stall)}
-                  style={{
-                    background: '#141d35', border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: 16, padding: 20, cursor: 'pointer', transition: 'all 0.15s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(240,180,41,0.4)'; e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 10px 28px rgba(0,0,0,0.4)' }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}
+                  className="stall-card"
                 >
-                  <div style={{ fontWeight: 700, color: '#fff', fontSize: 14, marginBottom: 4 }}>{stall.name}</div>
-                  <div style={{ fontSize: 11, color: '#64748b', marginBottom: 10 }}>{stall.cat}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: '#94a3b8' }}>
-                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#4ade80', display: 'inline-block', boxShadow: '0 0 6px #4ade80' }}></span>
+                  <div className="stall-card-name">{stall.name}</div>
+                  <div className="stall-card-cat">{stall.cat}</div>
+                  <div className="stall-card-footer">
+                    <div className="stall-card-hours">
+                      <span className="stall-card-dot"></span>
                       {stall.hrs}
                     </div>
-                    <span style={{ fontSize: 10, color: '#64748b' }}>{stall.menu.filter(m => m.av).length} items</span>
+                    <span className="stall-card-items">{stall.menu.filter(m => m.av).length} items</span>
                   </div>
                 </div>
               ))}
@@ -602,14 +477,14 @@ export default function StudentDashboard() {
           <>
             <button
               onClick={() => { setSelectedStallObj(null); clearCart() }}
-              style={{ background: 'none', border: 'none', color: '#f0b429', cursor: 'pointer', fontSize: 12, fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'Sora, system-ui, sans-serif' }}
+              className="student-back-btn"
             >
                Back to stalls
             </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+            <div className="stall-menu-header">
               <div>
-                <h2 style={{ fontSize: 20, fontWeight: 700, color: '#fff', lineHeight: 1.2 }}>{selectedStallObj.name}</h2>
-                <div style={{ fontSize: 11, color: '#64748b' }}>{selectedStallObj.cat} - {selectedStallObj.hrs}</div>
+                <h2 className="stall-menu-name">{selectedStallObj.name}</h2>
+                <div className="stall-menu-info">{selectedStallObj.cat} - {selectedStallObj.hrs}</div>
               </div>
             </div>
             <div>
@@ -630,7 +505,6 @@ export default function StudentDashboard() {
         )}
       </div>
 
-      {/* Right: cart */}
       {selectedStallObj && (
         <CartPanel
           cartItems={cartItems}
@@ -650,100 +524,100 @@ export default function StudentDashboard() {
 
   const renderMyOrders = () => (
     <div>
-      <h1 style={{ fontSize: 24, fontWeight: 700, color: '#fff', marginBottom: 20, letterSpacing: '-0.02em' }}>
+      <h1 className="orders-title">
         My Orders
       </h1>
       {orders.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 0', color: '#475569' }}>
+        <div className="orders-empty">
           <div style={{ fontSize: 40, marginBottom: 12 }}></div>
-          <div style={{ fontSize: 14 }}>No orders yet</div>
-          <div style={{ fontSize: 12, marginTop: 6 }}>Head to Order Food to place your first order</div>
+          <div className="orders-empty-text">No orders yet</div>
+          <div className="orders-empty-hint">Head to Order Food to place your first order</div>
           <button
             onClick={() => setTab('order')}
-            style={{ marginTop: 16, padding: '10px 24px', borderRadius: 10, background: '#f0b429', color: '#0a0f1e', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 12, fontFamily: 'Sora, system-ui, sans-serif' }}
+            className="orders-empty-btn"
           >
             Browse stalls 
           </button>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div className="orders-list">
           {orders.map(order => {
             const status = STATUS[order.st] || STATUS.pending
             const stall = stalls.find(s => s.id === order.stallId)
             return (
-              <div
-                key={order.id}
-                style={{ background: '#141d35', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 20, borderLeft: `3px solid ${status.color}` }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+              <div key={order.id} className="order-card" style={{ borderLeft: `3px solid ${status.color}` }}>
+                <div className="order-card-header">
                   <div>
-                    <div style={{ fontWeight: 700, color: '#fff', fontSize: 15 }}>{order.stallName}</div>
-                    <div style={{ fontSize: 10, color: '#475569', fontFamily: 'monospace', marginTop: 2 }}>{order.id}</div>
-                    <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{formatDate(order.createdAt)}</div>
+                    <div className="order-stall-name">{order.stallName}</div>
+                    <div className="order-id">{order.id}</div>
+                    <div className="order-date">{formatDate(order.createdAt)}</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: '#f0b429' }}>KES {order.tot}</div>
-                    <span style={{ display: 'inline-block', background: status.bg, color: status.color, fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 99, marginTop: 4 }}>
+                    <div className="order-amount">KES {order.tot}</div>
+                    <span className="order-status-badge" style={{ background: status.bg, color: status.color }}>
                       {status.label}
                     </span>
                   </div>
                 </div>
 
-                {/* Progress tracker */}
                 <OrderTracker step={status.step} />
 
-                {/* Status message */}
                 {order.st === 'paid' && (
-                  <div style={{ background: 'rgba(251,146,60,0.08)', border: '1px solid rgba(251,146,60,0.2)', borderRadius: 8, padding: '8px 12px', fontSize: 11, color: '#fb923c', marginBottom: 12 }}>
+                  <div className="order-status-msg paid">
                     &#8987; Payment received - waiting for vendor to confirm
                   </div>
                 )}
                 {order.st === 'accepted' && (
-                  <div style={{ background: 'rgba(240,180,41,0.08)', border: '1px solid rgba(240,180,41,0.2)', borderRadius: 8, padding: '8px 12px', fontSize: 11, color: '#f0b429', marginBottom: 12 }}>
+                  <div className="order-status-msg accepted">
                      Order confirmed - collecting at {order.pu}
                   </div>
                 )}
                 {order.st === 'preparing' && (
-                  <div style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.2)', borderRadius: 8, padding: '8px 12px', fontSize: 11, color: '#60a5fa', marginBottom: 12 }}>
+                  <div className="order-status-msg preparing">
                     ⌛ Your order is being prepared
                   </div>
                 )}
                 {order.st === 'ready' && (
-                  <div style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 8, padding: '8px 12px', fontSize: 11, color: '#4ade80', marginBottom: 12 }}>
+                  <div className="order-status-msg ready">
                      Your order is ready! Head to {order.stallName} to collect
                   </div>
                 )}
 
-                {/* Items */}
                 <div style={{ marginBottom: 10 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Items</div>
+                  <div className="order-items-label">Items</div>
                   {(order.items || []).map((item, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#94a3b8', paddingBottom: 4 }}>
+                    <div key={i} className="order-item">
                       <span>&#8226; {item.nm || item} {item.qty > 1 ? `x${item.qty}` : ''}</span>
-                      {item.pr && <span style={{ color: '#64748b' }}>KES {item.pr * (item.qty || 1)}</span>}
+                      {item.pr && <span className="order-item-price">KES {item.pr * (item.qty || 1)}</span>}
                     </div>
                   ))}
                 </div>
 
-                <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#475569', marginBottom: 12 }}>
+                <div className="order-meta">
                   <span>{order.mode === 'Dine-in' ? '' : ''} {order.mode}</span>
                   <span>- Pickup {order.pu}</span>
                 </div>
 
-                <button
-                  onClick={() => downloadReceipt(order, stall)}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6,
-                    padding: '7px 14px', borderRadius: 9, fontSize: 11, fontWeight: 600,
-                    background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                    color: '#94a3b8', cursor: 'pointer', fontFamily: 'Sora, system-ui, sans-serif',
-                    transition: 'all 0.13s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#f0b429'; e.currentTarget.style.color = '#f0b429' }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#94a3b8' }}
-                >
-                   Download receipt
-                </button>
+                <div className="order-card-footer">
+                  <button onClick={() => downloadReceipt(order, stall)} className="order-receipt-btn">
+                     Download receipt
+                  </button>
+                  <button onClick={() => window.print()} className="order-receipt-btn">
+                    Print Receipt
+                  </button>
+                  {(order.st === 'pending' || order.st === 'accepted') && (
+                    <button
+                      onClick={() => {
+                        if (window.confirm('Cancel this order?')) {
+                          updateOrderStatus(order.id, 'cancelled')
+                        }
+                      }}
+                      className="order-cancel-btn"
+                    >
+                      Cancel Order
+                    </button>
+                  )}
+                </div>
               </div>
             )
           })}
@@ -753,20 +627,20 @@ export default function StudentDashboard() {
   )
 
   const renderProfile = () => (
-    <div style={{ maxWidth: 520 }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, color: '#fff', marginBottom: 20, letterSpacing: '-0.02em' }}>
+    <div className="profile-page">
+      <h1 className="profile-title">
         My Profile
       </h1>
-      <div style={{ background: '#141d35', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 24, marginBottom: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-          <div style={{ width: 60, height: 60, borderRadius: '50%', background: '#f0b429', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700, color: '#0a0f1e', flexShrink: 0 }}>
+      <div className="profile-card">
+        <div className="profile-header">
+          <div className="profile-avatar">
             {user ? `${(user.firstName || user.name || 'U')[0]}${(user.lastName || '')[0] || ''}`.toUpperCase() : 'U'}
           </div>
           <div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: '#fff' }}>
+            <div className="profile-name">
               {user ? `${user.firstName || user.name || ''} ${user.lastName || ''}`.trim() : 'Student'}
             </div>
-            <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+            <div className="profile-role">
               {role === 'staff' ? 'Staff / Lecturer' : role === 'other' ? 'Guest' : 'Student'} - Strathmore University
             </div>
           </div>
@@ -778,15 +652,12 @@ export default function StudentDashboard() {
           { label: 'Account role', value: role === 'staff' ? 'Staff / Lecturer' : role === 'other' ? 'Guest' : 'Student' },
           { label: 'Total orders', value: orders.length },
           { label: 'Total spent', value: `KES ${orders.reduce((s, o) => s + (o.tot || 0), 0).toLocaleString()}` },
-        ].map(({ label, value, icon }) => (
-          <div
-            key={label}
-            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
-          >
+        ].map(({ label, value }) => (
+          <div key={label} className="profile-row">
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 12, color: '#94a3b8' }}>{label}</span>
+              <span className="profile-row-label">{label}</span>
             </div>
-            <span style={{ fontSize: 12, fontWeight: 600, color: '#fff' }}>{value}</span>
+            <span className="profile-row-value">{value}</span>
           </div>
         ))}
       </div>

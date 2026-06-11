@@ -1,37 +1,18 @@
 ﻿import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-
 import { subscribeToStalls } from '../../services/stallService'
+import { subscribeToAllOrders } from '../../services/orderservice'
 import { formatCurrency } from '../../utils/formatters'
+import '../../styles/admin.css'
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList,
 } from 'recharts'
 
-// â”€â”€ Static data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const dailyOrders = [
-  { day: 'Mon', orders: 24, revenue: 3200 },
-  { day: 'Tue', orders: 31, revenue: 4100 },
-  { day: 'Wed', orders: 28, revenue: 3800 },
-  { day: 'Thu', orders: 38, revenue: 5100 },
-  { day: 'Fri', orders: 45, revenue: 6200 },
-  { day: 'Sat', orders: 52, revenue: 7100 },
-]
-const orderTypeData = [
-  { name: 'Dine-in',   value: 65 },
-  { name: 'Takeaway',  value: 35 },
-]
-const revenueByStall = [
-  { name: 'Mama Grace', revenue: 8200, fill: '#f0b429' },
-  { name: 'Deli Corner', revenue: 6400, fill: '#f7c948'  },
-  { name: 'Java Spot',   revenue: 5240, fill: '#fde68a'  },
-]
 const PIE_COLORS = ['#f0b429', '#1a2540']
-
 const PERIOD_MULTIPLIERS = { today: 0.18, week: 1, month: 4.3 }
 
-// â”€â”€ Tooltip style â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const TT = {
   contentStyle: {
     background: '#141d35', border: '1px solid rgba(255,255,255,0.12)',
@@ -40,7 +21,6 @@ const TT = {
   cursor: { fill: 'rgba(255,255,255,0.04)' },
 }
 
-// â”€â”€ Toast hook â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function useToast() {
   const [toasts, setToasts] = useState([])
   const add = (msg, type = 'info') => {
@@ -51,7 +31,6 @@ function useToast() {
   return { toasts, add }
 }
 
-// â”€â”€ Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const NAV = [
   { key: 'overview', label: 'Overview' },
   { key: 'orders',   label: 'All Orders' },
@@ -64,14 +43,14 @@ function Sidebar({ tab, setTab, user, onSignOut, sidebarOpen }) {
     : 'AD'
 
   return (
-    <div className={`dash-sidebar${sidebarOpen ? ' open' : ''}`} style={{ width: 200 }}>
+    <div className={`dash-sidebar${sidebarOpen ? ' open' : ''}`}>
       <div className="dash-logo-area">
-        <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>
-          Strath<em style={{ color: '#f0b429', fontStyle: 'normal' }}>Eats</em>
+        <div className="admin-sidebar-logo">
+          Strath<em>Eats</em>
         </div>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 6, background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.25)', borderRadius: 99, padding: '2px 10px' }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#a78bfa', display: 'inline-block' }}></span>
-          <span style={{ fontSize: 9, fontWeight: 700, color: '#a78bfa', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Admin Portal</span>
+        <div className="admin-role-badge">
+          <span className="admin-role-dot"></span>
+          <span className="admin-role-text">Admin Portal</span>
         </div>
       </div>
 
@@ -81,10 +60,7 @@ function Sidebar({ tab, setTab, user, onSignOut, sidebarOpen }) {
           <button
             key={item.key}
             onClick={() => setTab(item.key)}
-            className={`dash-nav-item ${tab === item.key ? 'active' : ''}`}
-            style={{ color: tab === item.key ? '#a78bfa' : undefined, background: tab === item.key ? 'rgba(167,139,250,0.12)' : undefined }}
-            onMouseEnter={e => { if (tab !== item.key) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
-            onMouseLeave={e => { if (tab !== item.key) e.currentTarget.style.background = 'transparent' }}
+            className={`dash-nav-item admin-nav-item ${tab === item.key ? 'active' : ''}`}
           >
             <span>{item.label}</span>
           </button>
@@ -93,22 +69,15 @@ function Sidebar({ tab, setTab, user, onSignOut, sidebarOpen }) {
 
       <div className="dash-user-area">
         <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 10px', marginBottom: 6 }}>
-          <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(139,92,246,0.3)', border: '1.5px solid rgba(139,92,246,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#a78bfa', flexShrink: 0 }}>
-            {initials}
-          </div>
+          <div className="admin-user-avatar">{initials}</div>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#fff' }}>
+            <div className="admin-user-name">
               {user ? `${user.firstName || user.name || 'Admin'} ${user.lastName || ''}`.trim() : 'Admin'}
             </div>
-            <div style={{ fontSize: 9, color: '#475569' }}>Platform administrator</div>
+            <div className="admin-user-role">Platform administrator</div>
           </div>
         </div>
-        <button
-          onClick={onSignOut}
-          className="dash-signout-btn"
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(248,113,113,0.08)'; e.currentTarget.style.color = '#f87171' }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b' }}
-        >
+        <button onClick={onSignOut} className="dash-signout-btn">
            Sign out
         </button>
       </div>
@@ -116,7 +85,6 @@ function Sidebar({ tab, setTab, user, onSignOut, sidebarOpen }) {
   )
 }
 
-// â”€â”€ Export CSV util â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function exportCSV(data, filename) {
   if (!data.length) return
   const headers = Object.keys(data[0]).join(',')
@@ -127,18 +95,9 @@ function exportCSV(data, filename) {
   URL.revokeObjectURL(url)
 }
 
-// â”€â”€ Card style â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const card = {
-  background: '#141d35',
-  border: '1px solid rgba(255,255,255,0.1)',
-  borderRadius: 16,
-  padding: 20,
-}
-
-// â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function AdminDashboard() {
   const navigate  = useNavigate()
-  const { isLoggedIn, logout, user } = useAuth()
+  const { isLoggedIn, logout, user, sessionWarning } = useAuth()
   const { toasts, add: addToast } = useToast()
 
     const [tab, setTab]           = useState('overview')
@@ -148,11 +107,23 @@ export default function AdminDashboard() {
     const [allOrders, setAllOrders] = useState([]);
 
     useEffect(() => {
-      const unsub = subscribeToStalls((docs) => {
+      const unsubStalls = subscribeToStalls((docs) => {
         setStalls(docs)
       })
-      return () => unsub?.()
+      const unsubOrders = subscribeToAllOrders((docs) => {
+        setAllOrders(docs || [])
+        const collected = (docs || []).filter(o => o.st === 'collected')
+        const revenue = collected.reduce((sum, o) => sum + (o.tot || 0), 0)
+        const userIds = new Set((docs || []).map(o => o.userId).filter(Boolean))
+        setAdminStats({ totalOrders: docs.length, totalRevenue: revenue, activeUsers: userIds.size })
+      })
+      return () => { unsubStalls?.(); unsubOrders?.() }
     }, [])
+
+  useEffect(() => {
+    if (sessionWarning) addToast('Your session is about to expire due to inactivity', 'warning')
+  }, [sessionWarning])
+
   const [period, setPeriod]     = useState('week')
   const [search, setSearch]     = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -163,7 +134,6 @@ export default function AdminDashboard() {
 
   if (!isLoggedIn) { navigate('/admin'); return null }
 
-  // â”€â”€ Scaled KPIs â”€â”€
   const m = PERIOD_MULTIPLIERS[period]
   const activeStallsCount = stalls.filter(s => s.online !== false).length
   const kpis = [
@@ -173,7 +143,6 @@ export default function AdminDashboard() {
     { label: 'Active Stalls',  value: activeStallsCount,                                      raw: activeStallsCount,                         trend: '-',    color: '#a78bfa',  border: '#7c3aed' },
   ]
 
-  // â”€â”€ Filtered orders â”€â”€
   const filteredOrders = useMemo(() => allOrders.filter(o => {
     const matchSearch = !search ||
       o.id.toLowerCase().includes(search.toLowerCase()) ||
@@ -181,47 +150,73 @@ export default function AdminDashboard() {
       o.stall.toLowerCase().includes(search.toLowerCase())
     const matchStatus = statusFilter === 'all' || o.st === statusFilter
     return matchSearch && matchStatus
-  }), [search, statusFilter])
+  }), [search, statusFilter, allOrders])
 
   const uniqueStatuses = ['all', ...Array.from(new Set(allOrders.map(o => o.st)))]
 
-  // â”€â”€ Render overview â”€â”€
+  const dailyOrders = useMemo(() => {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const groups = {}
+    allOrders.forEach(o => {
+      if (!o.createdAt) return
+      const date = o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt)
+      const day = days[date.getDay()]
+      if (!groups[day]) groups[day] = { day, orders: 0, revenue: 0 }
+      groups[day].orders++
+      groups[day].revenue += o.tot || 0
+    })
+    return days.filter(d => d !== 'Sun').map(d => groups[d] || { day: d, orders: 0, revenue: 0 })
+  }, [allOrders])
+
+  const orderTypeData = useMemo(() => {
+    const total = allOrders.length || 1
+    const dineIn = allOrders.filter(o => o.mode === 'Dine-in').length
+    const takeaway = total - dineIn
+    return [
+      { name: 'Dine-in', value: Math.round((dineIn / total) * 100) },
+      { name: 'Takeaway', value: Math.round((takeaway / total) * 100) },
+    ]
+  }, [allOrders])
+
+  const revenueByStall = useMemo(() => {
+    const map = {}
+    const collected = allOrders.filter(o => o.st === 'collected')
+    collected.forEach(o => {
+      const name = o.stallName || o.stall || 'Unknown'
+      if (!map[name]) map[name] = { name, revenue: 0, fill: '#f0b429' }
+      map[name].revenue += o.tot || 0
+    })
+    const colors = ['#f0b429', '#f7c948', '#fde68a', '#fbbf24', '#d97706']
+    return Object.values(map).map((item, i) => ({ ...item, fill: colors[i % colors.length] }))
+  }, [allOrders])
+
   const renderOverview = () => (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>Overview</h1>
-        {/* Period toggle */}
-        <div style={{ display: 'flex', background: '#141d35', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 4, gap: 4 }}>
+      <div className="admin-orders-header">
+        <h1 className="admin-orders-title">Overview</h1>
+        <div className="period-toggle">
           {['today', 'week', 'month'].map(p => (
-            <button key={p} onClick={() => setPeriod(p)} style={{
-              padding: '6px 14px', borderRadius: 7, border: 'none', cursor: 'pointer',
-              background: period === p ? '#f0b429' : 'transparent',
-              color: period === p ? '#0a0f1e' : '#64748b',
-              fontSize: 11, fontWeight: 700, textTransform: 'capitalize',
-              fontFamily: 'Sora, system-ui, sans-serif', transition: 'all 0.13s',
-            }}>{p}</button>
+            <button key={p} onClick={() => setPeriod(p)} className={`period-btn ${period === p ? 'active' : ''}`}>{p}</button>
           ))}
         </div>
       </div>
 
-      {/* KPI cards */}
-      <div className="admin-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 20 }}>
+      <div className="admin-kpi-grid">
         {kpis.map((k, i) => (
-          <div key={i} style={{ ...card, borderTop: `3px solid ${k.border}`, padding: '18px 20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{k.label}</div>
-              <span style={{ fontSize: 10, fontWeight: 700, color: '#4ade80', background: 'rgba(74,222,128,0.1)', borderRadius: 99, padding: '2px 7px' }}>{k.trend}</span>
+          <div key={i} className="card admin-kpi-card" style={{ borderTop: `3px solid ${k.border}` }}>
+            <div className="admin-kpi-header">
+              <div className="admin-kpi-label">{k.label}</div>
+              <span className="admin-kpi-trend">{k.trend}</span>
             </div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: k.color, letterSpacing: '-0.02em', lineHeight: 1 }}>{k.value}</div>
-            <div style={{ fontSize: 9, color: '#475569', marginTop: 6, textTransform: 'capitalize' }}>This {period}</div>
+            <div className="admin-kpi-value" style={{ color: k.color }}>{k.value}</div>
+            <div className="admin-kpi-period">This {period}</div>
           </div>
         ))}
       </div>
 
-      {/* Charts row 1 */}
-      <div className="admin-chart-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-        <div style={card}>
-          <div style={{ fontWeight: 700, color: '#fff', fontSize: 13, marginBottom: 14 }}>Orders & Revenue Trend</div>
+      <div className="admin-chart-grid">
+        <div className="card">
+          <div className="admin-chart-title">Orders & Revenue Trend</div>
           <ResponsiveContainer width="100%" height={240}>
             <LineChart data={dailyOrders}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
@@ -233,18 +228,18 @@ export default function AdminDashboard() {
               <Line yAxisId="r" type="monotone" dataKey="revenue" stroke="#60a5fa" strokeWidth={2} dot={{ fill: '#60a5fa', r: 3 }} name="Revenue (KES)" />
             </LineChart>
           </ResponsiveContainer>
-          <div style={{ display: 'flex', gap: 16, marginTop: 10 }}>
+          <div className="admin-chart-legend">
             {[{ color: '#f0b429', label: 'Orders' }, { color: '#60a5fa', label: 'Revenue' }].map(l => (
-              <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: '#64748b' }}>
-                <div style={{ width: 20, height: 2, borderRadius: 99, background: l.color }}></div>
+              <div key={l.label} className="admin-chart-legend-item">
+                <div className="admin-chart-legend-dot" style={{ background: l.color }}></div>
                 {l.label}
               </div>
             ))}
           </div>
         </div>
 
-        <div style={card}>
-          <div style={{ fontWeight: 700, color: '#fff', fontSize: 13, marginBottom: 14 }}>Order Type Split</div>
+        <div className="card">
+          <div className="admin-chart-title">Order Type Split</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <ResponsiveContainer width="60%" height={200}>
               <PieChart>
@@ -257,15 +252,15 @@ export default function AdminDashboard() {
             <div style={{ flex: 1 }}>
               {orderTypeData.map((d, i) => (
                 <div key={d.name} style={{ marginBottom: 16 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: '#e2e8f0', fontWeight: 600 }}>
-                      <div style={{ width: 10, height: 10, borderRadius: '50%', background: PIE_COLORS[i] }}></div>
+                  <div className="order-type-row">
+                    <div className="order-type-label">
+                      <div className="order-type-dot" style={{ background: PIE_COLORS[i] }}></div>
                       {d.name}
                     </div>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: PIE_COLORS[i] }}>{d.value}%</span>
+                    <span className="order-type-pct" style={{ color: PIE_COLORS[i] }}>{d.value}%</span>
                   </div>
-                  <div style={{ height: 5, borderRadius: 99, background: 'rgba(255,255,255,0.06)' }}>
-                    <div style={{ height: '100%', borderRadius: 99, background: PIE_COLORS[i], width: `${d.value}%` }} />
+                  <div className="order-type-bar-bg">
+                    <div className="order-type-bar-fill" style={{ background: PIE_COLORS[i], width: `${d.value}%` }} />
                   </div>
                 </div>
               ))}
@@ -274,9 +269,8 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Revenue by stall - full width */}
-      <div style={card}>
-        <div style={{ fontWeight: 700, color: '#fff', fontSize: 13, marginBottom: 14 }}>Revenue by Stall (KES)</div>
+      <div className="card">
+        <div className="admin-chart-title">Revenue by Stall (KES)</div>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={revenueByStall} layout="vertical" margin={{ left: 10, right: 40 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
@@ -295,38 +289,31 @@ export default function AdminDashboard() {
     </div>
   )
 
-  // â”€â”€ Render orders â”€â”€
   const renderOrders = () => (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>All Orders</h1>
+      <div className="admin-orders-header">
+        <h1 className="admin-orders-title">All Orders</h1>
         <button
           onClick={() => exportCSV(filteredOrders, 'stratheats-orders.csv')}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: '#94a3b8', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'Sora, system-ui, sans-serif', transition: 'all 0.13s' }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = '#f0b429'; e.currentTarget.style.color = '#f0b429' }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#94a3b8' }}
+          className="admin-export-btn"
         >
            Export CSV
         </button>
       </div>
 
-      {/* Search + filter bar */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
-        <div style={{ flex: 1, position: 'relative' }}>
-          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#475569' }}></span>
+      <div className="admin-search-bar">
+        <div className="admin-search-wrap">
           <input
             placeholder="Search by order ID, student or stall..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={{ width: '100%', padding: '10px 12px 10px 34px', background: '#141d35', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, fontSize: 12, color: '#e2e8f0', fontFamily: 'Sora, system-ui, sans-serif', outline: 'none' }}
-            onFocus={e => e.target.style.borderColor = '#f0b429'}
-            onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+            className="admin-search-input"
           />
         </div>
         <select
           value={statusFilter}
           onChange={e => setStatusFilter(e.target.value)}
-          style={{ padding: '10px 14px', background: '#141d35', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, fontSize: 12, color: '#e2e8f0', fontFamily: 'Sora, system-ui, sans-serif', outline: 'none', cursor: 'pointer' }}
+          className="admin-status-select"
         >
           {uniqueStatuses.map(s => (
             <option key={s} value={s}>{s === 'all' ? 'All statuses' : s}</option>
@@ -334,43 +321,36 @@ export default function AdminDashboard() {
         </select>
       </div>
 
-      {/* Summary bar */}
-      <div style={{ fontSize: 11, color: '#64748b', marginBottom: 12 }}>
-        Showing <strong style={{ color: '#e2e8f0' }}>{filteredOrders.length}</strong> of {allOrders.length} orders
-        {search && <> - filtered by "<span style={{ color: '#f0b429' }}>{search}</span>"</>}
+      <div className="admin-summary">
+        Showing <strong>{filteredOrders.length}</strong> of {allOrders.length} orders
+        {search && <> - filtered by "<span className="admin-summary-highlight">{search}</span>"</>}
       </div>
 
-      <div style={{ ...card, padding: 0, overflow: 'hidden' }}>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
             <thead>
-              <tr style={{ background: '#0f1729', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+              <tr>
                 {['Order ID', 'Student', 'Stall', 'Items', 'Total', 'Type', 'Status'].map(h => (
-                  <th key={h} style={{ textAlign: 'left', padding: '12px 16px', fontSize: 9, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>{h}</th>
+                  <th key={h}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {filteredOrders.length === 0 ? (
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: '#475569', fontSize: 13 }}>No orders match your search</td></tr>
+                <tr className="admin-table-empty"><td colSpan={7}>No orders match your search</td></tr>
               ) : filteredOrders.map((order, i) => {
                 const isPickedUp = order.st === 'Picked up'
                 return (
-                  <tr key={order.id} style={{ borderTop: '1px solid rgba(255,255,255,0.05)', transition: 'background 0.13s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <td style={{ padding: '12px 16px', fontSize: 11, fontFamily: 'monospace', color: '#f0b429', whiteSpace: 'nowrap' }}>{order.id}</td>
-                    <td style={{ padding: '12px 16px', fontSize: 12, color: '#e2e8f0', whiteSpace: 'nowrap' }}>{order.stu}</td>
-                    <td style={{ padding: '12px 16px', fontSize: 12, color: '#94a3b8', whiteSpace: 'nowrap' }}>{order.stall}</td>
-                    <td style={{ padding: '12px 16px', fontSize: 11, color: '#64748b', maxWidth: 200 }}>{order.itms}</td>
-                    <td style={{ padding: '12px 16px', fontSize: 12, fontWeight: 700, color: '#f0b429', whiteSpace: 'nowrap' }}>{formatCurrency(order.tot)}</td>
-                    <td style={{ padding: '12px 16px', fontSize: 11, color: '#94a3b8', whiteSpace: 'nowrap' }}>
-                      {order.type === 'Dine-in' ? '' : ''} {order.type}
-                    </td>
-                    <td style={{ padding: '12px 16px' }}>
-                      <span style={{
-                        display: 'inline-block', fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 99, whiteSpace: 'nowrap',
+                  <tr key={order.id}>
+                    <td className="admin-order-id">{order.id}</td>
+                    <td className="admin-order-student">{order.stu}</td>
+                    <td className="admin-order-stall">{order.stall}</td>
+                    <td className="admin-order-items">{order.itms}</td>
+                    <td className="admin-order-total">{formatCurrency(order.tot)}</td>
+                    <td className="admin-order-type">{order.type}</td>
+                    <td>
+                      <span className="admin-status-badge" style={{
                         background: isPickedUp ? 'rgba(74,222,128,0.12)' : 'rgba(96,165,250,0.12)',
                         color: isPickedUp ? '#4ade80' : '#60a5fa',
                       }}>
@@ -387,85 +367,72 @@ export default function AdminDashboard() {
     </div>
   )
 
-  // â”€â”€ Render stalls â”€â”€
   const renderStalls = () => (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>All Stalls</h1>
-        <span style={{ fontSize: 11, color: '#64748b' }}>{stalls.length} registered stalls</span>
+      <div className="admin-stalls-header">
+        <h1 className="admin-stalls-title">All Stalls</h1>
+        <span className="admin-stalls-count">{stalls.length} registered stalls</span>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div className="admin-stalls-list">
         {stalls.map(stall => {
           const status = stallStatuses[stall.id] || 'active'
           const isActive = status === 'active'
           return (
-            <div key={stall.id} style={{ ...card, borderLeft: `3px solid ${isActive ? '#4ade80' : '#f87171'}` }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div key={stall.id} className="card" style={{ borderLeft: `3px solid ${isActive ? '#4ade80' : '#f87171'}` }}>
+              <div className="admin-stall-main">
+                <div className="admin-stall-info">
                   <div>
-                    <div style={{ fontWeight: 700, color: '#fff', fontSize: 15, marginBottom: 3 }}>{stall.name}</div>
-                    <div style={{ fontSize: 11, color: '#64748b' }}>{stall.cat}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 5 }}>
-                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: isActive ? '#4ade80' : '#f87171', display: 'inline-block', boxShadow: isActive ? '0 0 6px #4ade80' : 'none' }}></span>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: isActive ? '#4ade80' : '#f87171' }}>
+                    <div className="admin-stall-name">{stall.name}</div>
+                    <div className="admin-stall-cat">{stall.cat}</div>
+                    <div className="admin-stall-status">
+                      <span className={`admin-stall-dot ${isActive ? 'active' : 'inactive'}`}></span>
+                      <span className={`admin-stall-status-text ${isActive ? 'active' : 'inactive'}`}>
                         {isActive ? 'Active' : 'Suspended'}
                       </span>
                     </div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ textAlign: 'right', padding: '10px 16px', background: 'rgba(240,180,41,0.08)', border: '1px solid rgba(240,180,41,0.2)', borderRadius: 10 }}>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: '#f0b429' }}>{stall.menu.length}</div>
-                    <div style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Menu items</div>
+                <div className="admin-stall-actions">
+                  <div className="admin-stall-metrics">
+                    <div className="admin-stall-metric-value">{stall.menu.length}</div>
+                    <div className="admin-stall-metric-label">Menu items</div>
                   </div>
                   <button
                     onClick={() => {
                       setStallStatuses(p => ({ ...p, [stall.id]: isActive ? 'suspended' : 'active' }))
                       addToast(`${stall.name} ${isActive ? 'suspended' : 'reactivated'}`, isActive ? 'error' : 'success')
                     }}
-                    style={{
-                      padding: '8px 14px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700,
-                      fontFamily: 'Sora, system-ui, sans-serif', transition: 'all 0.13s',
-                      background: isActive ? 'rgba(248,113,113,0.1)' : 'rgba(74,222,128,0.1)',
-                      color: isActive ? '#f87171' : '#4ade80',
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
-                    onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                    className={`admin-stall-toggle-btn ${isActive ? 'suspend' : 'reactivate'}`}
                   >
                     {isActive ? 'Suspend' : 'Reactivate'}
                   </button>
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 14, padding: '12px 0', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <div className="admin-stall-details">
                 {[
                   { label: 'Vendor', value: stall.vendor },
                   { label: 'Hours',  value: stall.hrs     },
                   { label: 'Available items', value: `${stall.menu.filter(m => m.av).length} / ${stall.menu.length}` },
                 ].map(({ label, value }) => (
                   <div key={label}>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>{label}</div>
-                    <div style={{ fontSize: 12, color: '#e2e8f0', fontWeight: 600 }}>{value}</div>
+                    <div className="admin-stall-detail-label">{label}</div>
+                    <div className="admin-stall-detail-value">{value}</div>
                   </div>
                 ))}
               </div>
 
               <div>
-                <div style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Menu preview</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                <div className="admin-menu-preview-label">Menu preview</div>
+                <div className="admin-menu-preview">
                   {stall.menu.slice(0, 5).map(item => (
-                    <span key={item.id} style={{
-                      fontSize: 10, padding: '4px 10px', borderRadius: 99,
-                      background: item.av ? 'rgba(255,255,255,0.05)' : 'rgba(248,113,113,0.06)',
-                      border: `1px solid ${item.av ? 'rgba(255,255,255,0.08)' : 'rgba(248,113,113,0.15)'}`,
-                      color: item.av ? '#94a3b8' : '#f87171',
-                    }}>
+                    <span key={item.id} className={`admin-menu-chip ${item.av ? 'avail' : 'out'}`}>
                       {item.nm} - KES {item.pr}{!item.av ? ' (out)' : ''}
                     </span>
                   ))}
                   {stall.menu.length > 5 && (
-                    <span style={{ fontSize: 10, color: '#475569', padding: '4px 0' }}>+{stall.menu.length - 5} more</span>
+                    <span className="admin-menu-more">+{stall.menu.length - 5} more</span>
                   )}
                 </div>
               </div>
