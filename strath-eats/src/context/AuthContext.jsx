@@ -16,52 +16,46 @@ export const AuthProvider = ({ children }) => {
   const [role, setRole] = useState(null)
   const [pendingVerification, setPendingVerification] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [sessionExpired, setSessionExpired] = useState(false)
   const [sessionWarning, setSessionWarning] = useState(false)
 
-  const lastActivity = useRef(Date.now())
   const warningTimer = useRef(null)
   const logoutTimer = useRef(null)
 
-  const resetTimers = useCallback(() => {
-    lastActivity.current = Date.now()
+  const clearTimers = useCallback(() => {
     setSessionWarning(false)
-    if (warningTimer.current) clearTimeout(warningTimer.current)
-    if (logoutTimer.current) clearTimeout(logoutTimer.current)
+    if (warningTimer.current) { clearTimeout(warningTimer.current); warningTimer.current = null }
+    if (logoutTimer.current) { clearTimeout(logoutTimer.current); logoutTimer.current = null }
   }, [])
 
-  const handleActivity = useCallback(() => {
-    if (!isLoggedIn || sessionExpired) return
-    resetTimers()
+  const startTimers = useCallback(() => {
+    clearTimers()
     warningTimer.current = setTimeout(() => setSessionWarning(true), SESSION_WARNING_MS)
-    logoutTimer.current = setTimeout(() => {
-      setSessionExpired(true)
+    logoutTimer.current = setTimeout(async () => {
       setSessionWarning(false)
+      await logOut()
       window.location.href = '/'
     }, SESSION_TIMEOUT_MS)
-  }, [isLoggedIn, sessionExpired, resetTimers])
+  }, [clearTimers])
+
+  const handleActivity = useCallback(() => {
+    if (!isLoggedIn) return
+    startTimers()
+  }, [isLoggedIn, startTimers])
 
   useEffect(() => {
     if (!isLoggedIn) return
     requestNotificationPermission()
-    resetTimers()
-    warningTimer.current = setTimeout(() => setSessionWarning(true), SESSION_WARNING_MS)
-    logoutTimer.current = setTimeout(() => {
-      setSessionExpired(true)
-      setSessionWarning(false)
-      window.location.href = '/'
-    }, SESSION_TIMEOUT_MS)
+    startTimers()
 
     const events = ['mousedown', 'keydown', 'touchstart']
     const opts = { passive: true }
     for (const e of events) window.addEventListener(e, handleActivity, opts)
 
     return () => {
-      if (warningTimer.current) clearTimeout(warningTimer.current)
-      if (logoutTimer.current) clearTimeout(logoutTimer.current)
+      clearTimers()
       for (const e of events) window.removeEventListener(e, handleActivity, opts)
     }
-  }, [isLoggedIn, handleActivity, resetTimers])
+  }, [isLoggedIn, startTimers, clearTimers, handleActivity])
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -144,18 +138,12 @@ export const AuthProvider = ({ children }) => {
   }
 
   const logout = async () => {
+    clearTimers()
     await logOut()
     setUser(null)
     setRole(null)
     setPendingVerification(false)
     setIsLoggedIn(false)
-    setSessionExpired(false)
-    setSessionWarning(false)
-  }
-
-  const dismissSessionExpired = () => {
-    setSessionExpired(false)
-    resetTimers()
   }
 
   if (loading) {
@@ -171,11 +159,9 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{
-      isLoggedIn: isLoggedIn && !sessionExpired,
-      user, role, pendingVerification,
+      isLoggedIn, user, role, pendingVerification,
       login, register, logout,
-      sessionExpired, sessionWarning,
-      dismissSessionExpired,
+      sessionWarning,
     }}>
       {children}
     </AuthContext.Provider>
