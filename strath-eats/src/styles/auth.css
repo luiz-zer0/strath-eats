@@ -1,0 +1,254 @@
+/* ── Auth page extras ── */
+.auth-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  margin-bottom: 7px;
+}
+
+.auth-brand {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.auth-brand em {
+  color: #f0b429;
+  font-style: normal;
+}
+
+.auth-role-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 99px;
+  padding: 6px 16px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.auth-heading {
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  letter-spacing: -0.03em;
+  margin-bottom: 6px;
+}
+
+.auth-subtext {
+  font-size: 13px;
+  color: #64748b;
+  text-align: center;
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+
+.auth-name-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.auth-switch-text {
+  font-size: 12px;
+  color: #475569;
+  text-align: center;
+  margin-top: 16px;
+}
+
+.auth-demo-note {
+  margin-top: 20px;
+  padding: 12px 16px;
+  background: rgba(240,180,41,0.05);
+  border: 1px solid rgba(240,180,41,0.15);
+  border-radius: 12px;
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.input-dark-border {
+  border-color: rgba(255,255,255,0.1);
+}
+
+.input-dark-border:focus {
+  border-color: #f0b429;
+  box-shadow: 0 0 0 3px rgba(240,180,41,0.1);
+}
+
+/* Verify email page */
+.verify-heading {
+  margin: 0;
+  font-size: 26px;
+  color: #fff;
+}
+
+.verify-desc {
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.6;
+}
+
+.verify-form {
+  margin-top: 16px;
+}
+
+.verify-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.verify-input {
+  margin-bottom: 12px;
+}
+
+.verify-error {
+  color: #f87171;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.verify-success {
+  color: #4ade80;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.verify-btn {
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  background: #f0b429;
+  color: #0a0f1e;
+}
+
+.verify-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.verify-btn-ghost {
+  width: 100%;
+  margin-top: 10px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.18);
+  color: #cbd5e1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.verify-btn-ghost:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Google button */
+.auth-google-btn {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: #141d35;
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Sora', system-ui, sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.13s;
+}
+
+.auth-google-btn:hover {
+  background: #1a2540;
+  border-color: rgba(240,180,41,0.3);
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+}
+
+.auth-divider-text {
+  font-size: 11px;
+  color: #475569;
+  white-space: nowrap;
+}
+
+/* Session warning toast */
+.session-warning {
+  background: rgba(240,180,41,0.12);
+  border: 1px solid rgba(240,180,41,0.25);
+  color: #f0b429;
+}
+
+/* Loading overlay */
+.auth-loading-overlay {
+  min-height: 100vh;
+  background: #0a0f1e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-loading-content {
+  text-align: center;
+}
+
+.auth-loading-spinner {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.auth-loading-text {
+  font-size: 13px;
+  font-family: 'Sora', system-ui, sans-serif;
+  color: #94a3b8;
+}
+
+/* Session expired banner */
+.session-expired-banner {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(240,180,41,0.12);
+  border: 1px solid rgba(240,180,41,0.25);
+  color: #f0b429;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 9999;
+  cursor: pointer;
+  font-family: 'Sora', system-ui, sans-serif;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+.session-expired-banner:hover {
+  background: rgba(240,180,41,0.18);
+}
