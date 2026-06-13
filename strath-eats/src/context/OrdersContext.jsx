@@ -20,8 +20,8 @@ export const OrdersProvider = ({ children }) => {
   const toastsRef = useRef(null)
 
   useEffect(() => {
-    // ✨ FIX 2: If no user is logged in, OR if the user is a vendor, stop immediately!
-    if (!isLoggedIn || !user?.uid || role === 'vendor') {
+    
+    if (!isLoggedIn || !user?.uid || role === 'vendor' || role === 'admin' || user?.stallId) {
       setOrders([])
       setLoadingOrders(false)
       return undefined
