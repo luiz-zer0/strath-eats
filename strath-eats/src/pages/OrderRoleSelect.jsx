@@ -29,7 +29,7 @@ export default function OrderRoleSelect() {
           onClick={() => navigate('/')}
           className="text-txs hover:text-gold transition"
         >
-          â† Back
+          Go Back
         </button>
       </div>
 
