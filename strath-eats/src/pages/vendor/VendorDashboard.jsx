@@ -1,7 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { formatCurrency } from '../../utils/formatters'
+import { formatCurrency, formatDate } from '../../utils/formatters'
 import {
   buildOrderTrend,
   buildOrdersByHour,
@@ -133,6 +133,7 @@ export default function VendorDashboard() {
   const [loadingStall, setLoadingStall] = useState(true)
   const [firestoreError, setFirestoreError] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [orderFilter, setOrderFilter] = useState('incoming')
 
   useEffect(() => {
     if (sessionWarning) {
@@ -363,7 +364,18 @@ export default function VendorDashboard() {
   }
 
   //  Render tabs
-  const renderOrders = () => (
+  const renderOrders = () => {
+    const FILTERS = [
+      { key: 'incoming',  label: 'Incoming',  statuses: ['paid'] },
+      { key: 'ongoing',   label: 'Ongoing',   statuses: ['accepted', 'preparing', 'ready'] },
+      { key: 'completed', label: 'Completed', statuses: ['collected', 'cancelled'] },
+    ]
+    const filteredOrders = orders.filter(o => {
+      const f = FILTERS.find(f => f.key === orderFilter)
+      return f ? f.statuses.includes(o.st) : true
+    })
+
+    return (
     <div>
       <div className="vendor-orders-header">
         <h1 className="vendor-orders-title">Orders Queue</h1>
@@ -389,75 +401,94 @@ export default function VendorDashboard() {
         </div>
       </div>
 
-      {(() => {
-        const activeOrders = orders.filter(o => o.st !== 'collected' && o.st !== 'cancelled')
-        if (activeOrders.length === 0) {
+      <div style={{ display:'flex', gap: 8, marginBottom: 16 }}>
+        {FILTERS.map(f => {
+          const count = orders.filter(o => f.statuses.includes(o.st)).length
+          const active = orderFilter === f.key
           return (
-            <div className="card vendor-orders-empty">
-              <div style={{ fontSize: 36, marginBottom: 10 }}></div>
-              {firestoreError ? (
-                <div style={{ color: '#f87171', fontSize: 14, marginBottom: 8 }}>Error: {firestoreError}</div>
-              ) : null}
-              <div className="vendor-orders-empty-text">All caught up - no pending orders</div>
-            </div>
+            <button
+              key={f.key}
+              onClick={() => setOrderFilter(f.key)}
+              style={{
+                padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                fontSize: 13, fontWeight: 600,
+                background: active ? '#f0b429' : 'rgba(255,255,255,0.06)',
+                color: active ? '#0a0f1e' : '#94a3b8',
+              }}
+            >
+              {f.label}{count > 0 ? ` (${count})` : ''}
+            </button>
           )
-        }
-        return (
-          <div style={{ display:'flex', flexDirection:'column', gap: 12 }}>
-            {activeOrders.map(order => {
-              const st = STATUS_CFG[order.st] || STATUS_CFG.paid
-              return (
-                <div key={order.id} className="card" style={{ borderLeft: `3px solid ${st.color}` }}>
-                  <div className="vendor-order-header">
-                    <div>
-                      <div className="vendor-order-customer">{order.user}</div>
-                      <div className="vendor-order-id">{order.id}</div>
-                    </div>
-                    <div style={{ display:'flex', alignItems:'center', gap: 10 }}>
-                      <div className="vendor-order-amount">KES {order.tot}</div>
-                      <span className="vendor-order-status" style={{ background: st.bg, color: st.color }}>
-                        {st.label}
-                      </span>
-                    </div>
-                  </div>
+        })}
+      </div>
 
-                  <div className="vendor-order-items-box">
-                    {order.items.map((item,i) => (
-                      <div key={i} className="vendor-order-item" style={{ paddingBottom: i < order.items.length - 1 ? 4 : 0 }}>
-                    • {item?.qty || 1}x {item?.nm || (typeof item === 'string' ? item : 'Unknown Item')}
-                    {item?.pr ? <span className="vendor-order-item-price"> — KES {item.pr * (item.qty || 1)}</span> : null}
+      {filteredOrders.length === 0 ? (
+        <div className="card vendor-orders-empty">
+          <div style={{ fontSize: 36, marginBottom: 10 }}></div>
+          {firestoreError ? (
+            <div style={{ color: '#f87171', fontSize: 14, marginBottom: 8 }}>Error: {firestoreError}</div>
+          ) : null}
+          <div className="vendor-orders-empty-text">No {orderFilter} orders</div>
+        </div>
+      ) : (
+        <div style={{ display:'flex', flexDirection:'column', gap: 12 }}>
+          {filteredOrders.map(order => {
+            const st = STATUS_CFG[order.st] || STATUS_CFG.paid
+            const isCompleted = orderFilter === 'completed'
+            return (
+              <div key={order.id} className="card" style={{ borderLeft: `3px solid ${st.color}` }}>
+                <div className="vendor-order-header">
+                  <div>
+                    <div className="vendor-order-customer">{order.user}</div>
+                    <div className="vendor-order-id">{order.id}</div>
+                    <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{formatDate(order.createdAt)}</div>
                   </div>
-                    ))}
-                  </div>
-
-                  <div className="vendor-order-meta">
-                    <span>{order.mode === 'Dine-in' ? '' : ''} {order.mode}</span>
-                    <span>Pickup {order.pu}</span>
-                  </div>
-
-                  <div className="vendor-actions">
-                    {order.st === 'paid' && <>
-                      <button onClick={() => handleConfirm(order.id)} className="btn-sm btn-confirm"> Confirm</button>
-                      <button onClick={() => handleReject(order.id)} className="btn-sm btn-reject"> Cancel</button>
-                    </>}
-                    {order.st === 'accepted' && order.rm && (
-                      <button onClick={() => handlePreparing(order.id)} className="vendor-action-btn prepare"> Prepare</button>
-                    )}
-                    {order.st === 'preparing' && (
-                      <button onClick={() => handleReady(order.id)} className="btn-sm btn-ready"> Mark Ready</button>
-                    )}
-                    {order.st === 'ready' && (
-                      <button onClick={() => handleCollected(order.id)} className="vendor-action-btn collected"> Mark Collected</button>
-                    )}
+                  <div style={{ display:'flex', alignItems:'center', gap: 10 }}>
+                    <div className="vendor-order-amount">KES {order.tot}</div>
+                    <span className="vendor-order-status" style={{ background: st.bg, color: st.color }}>
+                      {st.label}
+                    </span>
                   </div>
                 </div>
-              )
-            })}
-          </div>
-        )
-      })()}
+
+                <div className="vendor-order-items-box">
+                  {order.items.map((item,i) => (
+                    <div key={i} className="vendor-order-item" style={{ paddingBottom: i < order.items.length - 1 ? 4 : 0 }}>
+                  • {item?.qty || 1}x {item?.nm || (typeof item === 'string' ? item : 'Unknown Item')}
+                  {item?.pr ? <span className="vendor-order-item-price"> — KES {item.pr * (item.qty || 1)}</span> : null}
+                </div>
+                  ))}
+                </div>
+
+                <div className="vendor-order-meta">
+                  <span>{order.mode === 'Dine-in' ? '' : ''} {order.mode}</span>
+                  <span>Pickup {order.pu}</span>
+                </div>
+
+                {!isCompleted && (
+                <div className="vendor-actions">
+                  {order.st === 'paid' && <>
+                    <button onClick={() => handleConfirm(order.id)} className="btn-sm btn-confirm"> Confirm</button>
+                    <button onClick={() => handleReject(order.id)} className="btn-sm btn-reject"> Cancel</button>
+                  </>}
+                  {order.st === 'accepted' && order.rm && (
+                    <button onClick={() => handlePreparing(order.id)} className="vendor-action-btn prepare"> Prepare</button>
+                  )}
+                  {order.st === 'preparing' && (
+                    <button onClick={() => handleReady(order.id)} className="btn-sm btn-ready"> Mark Ready</button>
+                  )}
+                  {order.st === 'ready' && (
+                    <button onClick={() => handleCollected(order.id)} className="vendor-action-btn collected"> Mark Collected</button>
+                  )}
+                </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
-  )
+  )}
 
   const renderMenu = () => (
     <div>

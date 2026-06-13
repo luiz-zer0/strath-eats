@@ -8,7 +8,7 @@ import { formatCurrency, formatDate } from '../../utils/formatters'
 import { downloadReceipt } from '../../utils/receipt'
 import { triggerMpesaStkPush, updateOrderStatus } from '../../services/orderservice'
 import { db } from '../../services/firebase'
-import { collection, addDoc } from 'firebase/firestore'
+import { doc, updateDoc, collection, addDoc } from 'firebase/firestore'
 import '../../styles/student.css'
 
 const STATUS = {
@@ -383,6 +383,18 @@ export default function StudentDashboard() {
   const [selectedStallObj, setSelectedStallObj] = useState(null)
   const [portionItem, setPortionItem] = useState(null) // item awaiting portion selection
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [editingMpesa, setEditingMpesa] = useState(false)
+  const [mpesaInput, setMpesaInput] = useState(user?.mpesa || '')
+
+  const handleSaveMpesa = async () => {
+    try {
+      await updateDoc(doc(db, 'users', user.uid), { mpesa: mpesaInput })
+      setEditingMpesa(false)
+      addToast('M-Pesa number updated', 'success')
+    } catch (err) {
+      addToast(err?.message || 'Failed to update M-Pesa number', 'error')
+    }
+  }
 
   if (!isLoggedIn) {
     navigate('/order')
@@ -648,16 +660,40 @@ export default function StudentDashboard() {
         {[
           { label: 'Student / Staff ID', value: user?.studentId || user?.staffId || '-' },
           { label: 'Email address', value: user?.email || '-' },
-          { label: 'M-Pesa number', value: user?.mpesa || '-' },
+          { label: 'M-Pesa number', key: 'mpesa' },
           { label: 'Account role', value: role === 'staff' ? 'Staff / Lecturer' : role === 'other' ? 'Guest' : 'Student' },
           { label: 'Total orders', value: orders.length },
           { label: 'Total spent', value: `KES ${orders.reduce((s, o) => s + (o.tot || 0), 0).toLocaleString()}` },
-        ].map(({ label, value }) => (
+        ].map(({ label, value, key }) => (
           <div key={label} className="profile-row">
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span className="profile-row-label">{label}</span>
             </div>
-            <span className="profile-row-value">{value}</span>
+            {key === 'mpesa' ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {editingMpesa ? (
+                  <>
+                    <input
+                      type="tel"
+                      value={mpesaInput}
+                      onChange={e => setMpesaInput(e.target.value)}
+                      className="input-dark"
+                      style={{ padding: '4px 8px', fontSize: 13, width: 140 }}
+                      placeholder="07XX XXX XXX"
+                    />
+                    <button onClick={handleSaveMpesa} className="btn-sm btn-confirm" style={{ padding: '4px 10px', fontSize: 12 }}>Save</button>
+                    <button onClick={() => setEditingMpesa(false)} className="btn-sm btn-reject" style={{ padding: '4px 10px', fontSize: 12 }}>Cancel</button>
+                  </>
+                ) : (
+                  <>
+                    <span className="profile-row-value">{user?.mpesa || '-'}</span>
+                    <button onClick={() => { setMpesaInput(user?.mpesa || ''); setEditingMpesa(true) }} className="btn-sm btn-confirm" style={{ padding: '4px 10px', fontSize: 12 }}>Edit</button>
+                  </>
+                )}
+              </div>
+            ) : (
+              <span className="profile-row-value">{value}</span>
+            )}
           </div>
         ))}
       </div>
