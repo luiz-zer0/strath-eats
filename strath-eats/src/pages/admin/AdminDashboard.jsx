@@ -11,7 +11,6 @@ import {
 } from 'recharts'
 
 const PIE_COLORS = ['#f0b429', '#1a2540']
-const PERIOD_MULTIPLIERS = { today: 0.18, week: 1, month: 4.3 }
 
 const TT = {
   contentStyle: {
@@ -134,13 +133,29 @@ export default function AdminDashboard() {
 
   if (!isLoggedIn) { navigate('/admin'); return null }
 
-  const m = PERIOD_MULTIPLIERS[period]
+  const periodFilteredOrders = useMemo(() => {
+    const now = new Date()
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const weekStart = new Date(todayStart)
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1)
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const range = period === 'today' ? todayStart : period === 'week' ? weekStart : monthStart
+    return allOrders.filter(o => {
+      const d = o.createdAt?.toDate ? o.createdAt.toDate() : o.createdAt ? new Date(o.createdAt) : null
+      return d && d >= range
+    })
+  }, [allOrders, period])
+
   const activeStallsCount = stalls.filter(s => s.online !== false).length
+  const periodOrders = periodFilteredOrders.length
+  const periodRevenue = periodFilteredOrders.reduce((s, o) => s + (o.tot || 0), 0)
+  const periodUsers = new Set(periodFilteredOrders.map(o => o.userId).filter(Boolean)).size
+
   const kpis = [
-    { label: 'Total Orders',   value: Math.round(adminStats.totalOrders * m),                  raw: Math.round(adminStats.totalOrders * m),   trend: '+12%', color: '#60a5fa',  border: '#2563eb' },
-    { label: 'Total Revenue',  value: formatCurrency(Math.round(adminStats.totalRevenue * m)), raw: null,                                       trend: '+8%',  color: '#f0b429',  border: '#f0b429' },
-    { label: 'Active Users',   value: adminStats.activeUsers,                                  raw: adminStats.activeUsers,                    trend: '+5%',  color: '#4ade80',  border: '#16a34a' },
-    { label: 'Active Stalls',  value: activeStallsCount,                                      raw: activeStallsCount,                         trend: '-',    color: '#a78bfa',  border: '#7c3aed' },
+    { label: 'Total Orders',   value: periodOrders,                                         raw: periodOrders,  trend: '+12%', color: '#60a5fa',  border: '#2563eb' },
+    { label: 'Total Revenue',  value: formatCurrency(periodRevenue),                         raw: null,          trend: '+8%',  color: '#f0b429',  border: '#f0b429' },
+    { label: 'Active Users',   value: periodUsers,                                           raw: periodUsers,   trend: '+5%',  color: '#4ade80',  border: '#16a34a' },
+    { label: 'Active Stalls',  value: activeStallsCount,                                     raw: activeStallsCount, trend: '-', color: '#a78bfa',  border: '#7c3aed' },
   ]
 
   const filteredOrders = useMemo(() => allOrders.filter(o => {

@@ -114,7 +114,15 @@ export function summarizeOrders(orders) {
   const averageOrderValue = totalOrders ? Math.round(totalRevenue / totalOrders) : 0
   const activeCustomers = new Set(orders.map(order => order.userId || order.userEmail).filter(Boolean)).size
 
-  return { totalOrders, totalRevenue, averageOrderValue, activeCustomers }
+  const now = new Date()
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const todayOrders = orders.filter(o => {
+    const d = toDate(o.createdAt)
+    return d && d >= todayStart
+  })
+  const todayRevenue = todayOrders.reduce((sum, order) => sum + orderRevenue(order), 0)
+
+  return { totalOrders, totalRevenue, averageOrderValue, activeCustomers, todayRevenue }
 }
 
 export function toAdminOrderRow(order) {
