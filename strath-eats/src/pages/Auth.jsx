@@ -163,7 +163,7 @@ export default function Auth() {
         <div className="auth-brand">
           Strath<em>Eats</em>
         </div>
-        <button onClick={() => navigate('/order')} className="back-btn">Back</button>
+        <button onClick={() => navigate('/')} className="back-btn">Back</button>
       </div>
 
       <div className="auth-body">
