@@ -1,6 +1,7 @@
 import { createContext, useEffect, useState, useContext, useRef, useCallback } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
-import { auth } from '../services/firebase'
+import { auth, db } from '../services/firebase'
+import { doc, updateDoc } from 'firebase/firestore'
 import { signIn, signUp, logOut, getUserProfile } from '../services/authservice'
 import { requestNotificationPermission } from '../services/notificationservice'
 import '../styles/auth.css'
@@ -146,6 +147,12 @@ export const AuthProvider = ({ children }) => {
     setIsLoggedIn(false)
   }
 
+  const refreshUser = async () => {
+    if (!user?.uid) return
+    const profile = await getUserProfile(user.uid)
+    if (profile) setUser(profile)
+  }
+
   if (loading) {
     return (
       <div className="auth-loading-overlay">
@@ -160,7 +167,7 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider value={{
       isLoggedIn, user, role, pendingVerification,
-      login, register, logout,
+      login, register, logout, refreshUser,
       sessionWarning,
     }}>
       {children}

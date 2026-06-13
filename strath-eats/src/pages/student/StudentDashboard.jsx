@@ -356,13 +356,13 @@ function CartPanel({ cartItems, orderMode, pickupTime, setOrderMode, setPickupTi
 
 export default function StudentDashboard() {
   const navigate = useNavigate()
-  const { isLoggedIn, logout, user, role, sessionWarning } = useAuth()
+  const { isLoggedIn, logout, user, role, sessionWarning, refreshUser } = useAuth()
   const {
     cartItems, selectedStall, orderMode, pickupTime,
     addToCart, removeFromCart, decreaseQty, clearCart,
     setSelectedStall, setOrderMode, setPickupTime, getTotal,
   } = useCart()
-  const { orders, placeOrder } = useOrders()
+  const { orders, ordersError, placeOrder } = useOrders()
   const { toasts, add: addToast } = useToastLocal()
   const [stalls, setStalls] = useState([])
 
@@ -389,6 +389,7 @@ export default function StudentDashboard() {
   const handleSaveMpesa = async () => {
     try {
       await updateDoc(doc(db, 'users', user.uid), { mpesa: mpesaInput })
+      await refreshUser()
       setEditingMpesa(false)
       addToast('M-Pesa number updated', 'success')
     } catch (err) {
@@ -657,6 +658,9 @@ export default function StudentDashboard() {
             </div>
           </div>
         </div>
+        {ordersError && (
+          <div style={{ color: '#f87171', fontSize: 12, marginBottom: 12, padding: '8px 12px', background: 'rgba(248,113,113,0.1)', borderRadius: 6 }}>Orders error: {ordersError}</div>
+        )}
         {[
           { label: 'Student / Staff ID', value: user?.studentId || user?.staffId || '-' },
           { label: 'Email address', value: user?.email || '-' },
