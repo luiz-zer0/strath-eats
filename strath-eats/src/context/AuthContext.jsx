@@ -61,19 +61,22 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        if (!firebaseUser.emailVerified) {
-          setPendingVerification(true)
-          setUser({ uid: firebaseUser.uid, email: firebaseUser.email })
-          setRole(null)
-          setIsLoggedIn(false)
-          setLoading(false)
-          return
-        }
+        try{
+          const profile=await getUserProfile(firebaseUser.uid)
+        
 
-        setPendingVerification(false)
+          if (!firebaseUser.emailVerified) {
+            setPendingVerification(true)
+            setUser({ uid: firebaseUser.uid, email: firebaseUser.email })
+            setRole(null)
+            setIsLoggedIn(false)
+            setLoading(false)
+            return
+          }
 
-        try {
-          const profile = await getUserProfile(firebaseUser.uid)
+          setPendingVerification(false)
+
+        
           if (profile) {
             setUser(profile)
             setRole(profile.role || null)

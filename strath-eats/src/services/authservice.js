@@ -85,7 +85,7 @@ export async function signIn(email, password, role) {
   assertStrathmoreEmail(email, role)
 
   const cred = await signInWithEmailAndPassword(auth, email, password)
-  if (!cred.user.emailVerified) {
+  if (!cred.user.emailVerified && role!=='admin') {
     const error = new Error('Please verify your Strathmore email before signing in.')
     error.code = 'auth/email-not-verified'
     throw error
