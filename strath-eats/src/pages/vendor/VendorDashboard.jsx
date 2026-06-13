@@ -214,9 +214,25 @@ export default function VendorDashboard() {
           if (!cachedDraft) {
             writeVendorDraft(resolvedStallId, stallDoc)
           }
+        } else {
+          if (cachedDraft) {
+            hydrateStallState(cachedDraft)
+            setFirestoreError('Stall not found in Firestore — showing local cache. Menu items may be outdated.')
+          } else {
+            setFirestoreError('Stall not found. Please contact support.')
+          }
         }
       })
-      .catch(() => {})
+      .catch((err) => {
+        console.error('Error fetching stall', err)
+        if (!active) return
+        const msg = err?.message || String(err)
+        setFirestoreError(msg)
+        addToast(`Stall fetch failed: ${msg}`, 'error')
+        if (cachedDraft) {
+          hydrateStallState(cachedDraft)
+        }
+      })
       .finally(() => {
         if (active) setLoadingStall(false)
       })
