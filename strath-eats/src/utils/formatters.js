@@ -10,7 +10,8 @@ export const formatTime = (time) => {
 
 export const formatDate = (date) => {
   if (!date) return ''
-  return new Date(date).toLocaleDateString('en-KE', {
+  const d = date.toDate ? date.toDate() : new Date(date)
+  return d.toLocaleDateString('en-KE', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

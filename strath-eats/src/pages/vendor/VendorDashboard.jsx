@@ -377,6 +377,9 @@ export default function VendorDashboard() {
       {orders.length === 0 ? (
         <div className="card vendor-orders-empty">
           <div style={{ fontSize: 36, marginBottom: 10 }}></div>
+          {firestoreError ? (
+            <div style={{ color: '#f87171', fontSize: 14, marginBottom: 8 }}>Error: {firestoreError}</div>
+          ) : null}
           <div className="vendor-orders-empty-text">All caught up - no pending orders</div>
         </div>
       ) : (
