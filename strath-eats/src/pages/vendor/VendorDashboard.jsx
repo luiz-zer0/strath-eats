@@ -8,7 +8,7 @@ import {
   buildTopItems,
   summarizeOrders,
 } from '../../utils/analytics'
-import { getStall } from '../../services/stallService'
+import { subscribeToStall } from '../../services/stallService'
 import { subscribeToVendorOrders, updateOrderStatus } from '../../services/orderservice'
 import { db } from '../../services/firebase'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
@@ -197,9 +197,11 @@ export default function VendorDashboard() {
       hydrateStallState(cachedDraft)
     }
 
-    getStall(resolvedStallId)
-      .then((stallDoc) => {
+    const unsubscribeStall = subscribeToStall(
+      resolvedStallId,
+      (stallDoc) => {
         if (!active) return
+        setLoadingStall(false)
         if (stallDoc) {
           const mergedDraft = cachedDraft
             ? {
@@ -208,34 +210,30 @@ export default function VendorDashboard() {
                 menu: Array.isArray(cachedDraft.menu) ? cachedDraft.menu : (stallDoc.menu || []),
               }
             : stallDoc
-
           hydrateStallState(mergedDraft)
-
           if (!cachedDraft) {
             writeVendorDraft(resolvedStallId, stallDoc)
           }
         } else {
           if (cachedDraft) {
-            hydrateStallState(cachedDraft)
             setFirestoreError('Stall not found in Firestore — showing local cache. Menu items may be outdated.')
           } else {
             setFirestoreError('Stall not found. Please contact support.')
           }
         }
-      })
-      .catch((err) => {
-        console.error('Error fetching stall', err)
+      },
+      (err) => {
         if (!active) return
+        setLoadingStall(false)
+        console.error('Stall listener error', err)
         const msg = err?.message || String(err)
         setFirestoreError(msg)
-        addToast(`Stall fetch failed: ${msg}`, 'error')
+        addToast(`Stall sync failed: ${msg}`, 'error')
         if (cachedDraft) {
           hydrateStallState(cachedDraft)
         }
-      })
-      .finally(() => {
-        if (active) setLoadingStall(false)
-      })
+      }
+    )
 
     const unsubscribeOrders = subscribeToVendorOrders(
       resolvedStallId,
@@ -252,6 +250,7 @@ export default function VendorDashboard() {
 
     return () => {
       active = false
+      unsubscribeStall?.()
       unsubscribeOrders?.()
     }
   }, [user])

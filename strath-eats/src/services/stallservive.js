@@ -26,6 +26,14 @@ export function subscribeToStalls(callback) {
   })
 }
 
+// ── Live listener for a single stall ─────────────────────────────
+export function subscribeToStall(stallId, callback, onError) {
+  return onSnapshot(doc(db, 'stalls', stallId),
+    snap => callback(snap.exists() ? { id: snap.id, ...snap.data() } : null),
+    onError
+  )
+}
+
 // ── Get menu for a specific stall ────────────────────────────────
 export async function getMenu(stallId) {
   const snap = await getDocs(collection(db, 'stalls', stallId, 'menu'))
