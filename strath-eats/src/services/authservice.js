@@ -21,7 +21,7 @@ function buildActionCodeSettings() {
 }
 
 function assertStrathmoreEmail(email, role) {
-  if (role === 'vendor') return
+  if (role === 'vendor'|| role === 'admin') return
   if (!email || !email.toLowerCase().endsWith(STRATHMORE_DOMAIN)) {
     const error = new Error('Only @strathmore.edu accounts can register or sign in.')
     error.code = 'auth/invalid-email-domain'
