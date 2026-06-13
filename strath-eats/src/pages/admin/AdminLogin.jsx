@@ -24,7 +24,8 @@ export default function AdminLogin() {
     })
   }
 
-  const handleSubmit = (e) => {
+  // ✨ FIX 1: Make sure to add 'async' here!
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
     if (!formData.email || !formData.password) {
@@ -32,12 +33,16 @@ export default function AdminLogin() {
       return
     }
 
-    if (formData.email === ADMIN_EMAIL && formData.password === ADMIN_PASSWORD) {
-      login({ email: formData.email }, 'admin')
+    // ✨ FIX 2: Replace the hardcoded check with the real Firebase login
+    try {
+      // This sends your real email and password to authservice.js, tagged as an 'admin'
+      await login(formData.email, formData.password, 'admin')
       addToast('Welcome to admin portal', 'success')
       navigate('/admin/dashboard')
-    } else {
-      addToast('Invalid admin credentials', 'error')
+    } catch (error) {
+      console.error('Admin login failed:', error)
+      // This will now show the actual error from Firebase if you type the wrong password!
+      addToast(error.message || 'Invalid admin credentials', 'error')
     }
   }
 
