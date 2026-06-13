@@ -11,7 +11,8 @@ export function toDate(value) {
 }
 
 export function orderTotal(order) {
-  return Number(order?.tot ?? order?.total ?? 0) || 0
+  const raw = order?.tot ?? order?.total ?? 0
+  return Number(String(raw).replace(/[^0-9.]/g, '')) || 0
 }
 
 export function orderStatus(order) {
@@ -138,5 +139,7 @@ export function toAdminOrderRow(order) {
     tot: orderTotal(order),
     type: order.mode || order.type || 'Unknown',
     st: orderStatus(order),
+    createdAt: order.createdAt,
+    userId: order.userId,
   }
 }

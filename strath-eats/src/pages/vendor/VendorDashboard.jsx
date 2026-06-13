@@ -374,67 +374,73 @@ export default function VendorDashboard() {
         </div>
       </div>
 
-      {orders.length === 0 ? (
-        <div className="card vendor-orders-empty">
-          <div style={{ fontSize: 36, marginBottom: 10 }}></div>
-          {firestoreError ? (
-            <div style={{ color: '#f87171', fontSize: 14, marginBottom: 8 }}>Error: {firestoreError}</div>
-          ) : null}
-          <div className="vendor-orders-empty-text">All caught up - no pending orders</div>
-        </div>
-      ) : (
-        <div style={{ display:'flex', flexDirection:'column', gap: 12 }}>
-          {orders.map(order => {
-            const st = STATUS_CFG[order.st] || STATUS_CFG.paid
-            return (
-              <div key={order.id} className="card" style={{ borderLeft: `3px solid ${st.color}` }}>
-                <div className="vendor-order-header">
-                  <div>
-                    <div className="vendor-order-customer">{order.user}</div>
-                    <div className="vendor-order-id">{order.id}</div>
+      {(() => {
+        const activeOrders = orders.filter(o => o.st !== 'collected' && o.st !== 'cancelled')
+        if (activeOrders.length === 0) {
+          return (
+            <div className="card vendor-orders-empty">
+              <div style={{ fontSize: 36, marginBottom: 10 }}></div>
+              {firestoreError ? (
+                <div style={{ color: '#f87171', fontSize: 14, marginBottom: 8 }}>Error: {firestoreError}</div>
+              ) : null}
+              <div className="vendor-orders-empty-text">All caught up - no pending orders</div>
+            </div>
+          )
+        }
+        return (
+          <div style={{ display:'flex', flexDirection:'column', gap: 12 }}>
+            {activeOrders.map(order => {
+              const st = STATUS_CFG[order.st] || STATUS_CFG.paid
+              return (
+                <div key={order.id} className="card" style={{ borderLeft: `3px solid ${st.color}` }}>
+                  <div className="vendor-order-header">
+                    <div>
+                      <div className="vendor-order-customer">{order.user}</div>
+                      <div className="vendor-order-id">{order.id}</div>
+                    </div>
+                    <div style={{ display:'flex', alignItems:'center', gap: 10 }}>
+                      <div className="vendor-order-amount">KES {order.tot}</div>
+                      <span className="vendor-order-status" style={{ background: st.bg, color: st.color }}>
+                        {st.label}
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ display:'flex', alignItems:'center', gap: 10 }}>
-                    <div className="vendor-order-amount">KES {order.tot}</div>
-                    <span className="vendor-order-status" style={{ background: st.bg, color: st.color }}>
-                      {st.label}
-                    </span>
+
+                  <div className="vendor-order-items-box">
+                    {order.items.map((item,i) => (
+                      <div key={i} className="vendor-order-item" style={{ paddingBottom: i < order.items.length - 1 ? 4 : 0 }}>
+                    • {item?.qty || 1}x {item?.nm || (typeof item === 'string' ? item : 'Unknown Item')}
+                    {item?.pr ? <span className="vendor-order-item-price"> — KES {item.pr * (item.qty || 1)}</span> : null}
+                  </div>
+                    ))}
+                  </div>
+
+                  <div className="vendor-order-meta">
+                    <span>{order.mode === 'Dine-in' ? '' : ''} {order.mode}</span>
+                    <span>Pickup {order.pu}</span>
+                  </div>
+
+                  <div className="vendor-actions">
+                    {order.st === 'paid' && <>
+                      <button onClick={() => handleConfirm(order.id)} className="btn-sm btn-confirm"> Confirm</button>
+                      <button onClick={() => handleReject(order.id)} className="btn-sm btn-reject"> Cancel</button>
+                    </>}
+                    {order.st === 'accepted' && order.rm && (
+                      <button onClick={() => handlePreparing(order.id)} className="vendor-action-btn prepare"> Prepare</button>
+                    )}
+                    {order.st === 'preparing' && (
+                      <button onClick={() => handleReady(order.id)} className="btn-sm btn-ready"> Mark Ready</button>
+                    )}
+                    {order.st === 'ready' && (
+                      <button onClick={() => handleCollected(order.id)} className="vendor-action-btn collected"> Mark Collected</button>
+                    )}
                   </div>
                 </div>
-
-                <div className="vendor-order-items-box">
-                  {order.items.map((item,i) => (
-                    <div key={i} className="vendor-order-item" style={{ paddingBottom: i < order.items.length - 1 ? 4 : 0 }}>
-                  • {item?.qty || 1}x {item?.nm || (typeof item === 'string' ? item : 'Unknown Item')}
-                  {item?.pr ? <span className="vendor-order-item-price"> — KES {item.pr * (item.qty || 1)}</span> : null}
-                </div>
-                  ))}
-                </div>
-
-                <div className="vendor-order-meta">
-                  <span>{order.mode === 'Dine-in' ? '' : ''} {order.mode}</span>
-                  <span>Pickup {order.pu}</span>
-                </div>
-
-                <div className="vendor-actions">
-                  {order.st === 'paid' && <>
-                    <button onClick={() => handleConfirm(order.id)} className="btn-sm btn-confirm"> Confirm</button>
-                    <button onClick={() => handleReject(order.id)} className="btn-sm btn-reject"> Cancel</button>
-                  </>}
-                  {order.st === 'accepted' && order.rm && (
-                    <button onClick={() => handlePreparing(order.id)} className="vendor-action-btn prepare"> Prepare</button>
-                  )}
-                  {order.st === 'preparing' && (
-                    <button onClick={() => handleReady(order.id)} className="btn-sm btn-ready"> Mark Ready</button>
-                  )}
-                  {order.st === 'ready' && (
-                    <button onClick={() => handleCollected(order.id)} className="vendor-action-btn collected"> Mark Collected</button>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
+              )
+            })}
+          </div>
+        )
+      })()}
     </div>
   )
 

@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { subscribeToStalls } from '../../services/stallService'
 import { subscribeToAllOrders } from '../../services/orderservice'
+import { subscribeToUsers } from '../../services/authservice'
 import { formatCurrency } from '../../utils/formatters'
+import { toAdminOrderRow } from '../../utils/analytics'
 import '../../styles/admin.css'
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, XAxis, YAxis,
@@ -104,19 +106,24 @@ export default function AdminDashboard() {
 
     const [adminStats, setAdminStats] = useState({ totalOrders: 0, totalRevenue: 0, activeUsers: 0 });
     const [allOrders, setAllOrders] = useState([]);
+    const [allUsers, setAllUsers] = useState([]);
 
     useEffect(() => {
       const unsubStalls = subscribeToStalls((docs) => {
         setStalls(docs)
       })
       const unsubOrders = subscribeToAllOrders((docs) => {
-        setAllOrders(docs || [])
-        const collected = (docs || []).filter(o => o.st === 'collected')
+        const rows = (docs || []).map(toAdminOrderRow)
+        setAllOrders(rows)
+        const collected = rows.filter(o => o.st === 'collected')
         const revenue = collected.reduce((sum, o) => sum + (o.tot || 0), 0)
-        const userIds = new Set((docs || []).map(o => o.userId).filter(Boolean))
-        setAdminStats({ totalOrders: docs.length, totalRevenue: revenue, activeUsers: userIds.size })
+        const userIds = new Set(rows.map(o => o.stu).filter(Boolean))
+        setAdminStats({ totalOrders: rows.length, totalRevenue: revenue, activeUsers: userIds.size })
       })
-      return () => { unsubStalls?.(); unsubOrders?.() }
+      const unsubUsers = subscribeToUsers((docs) => {
+        setAllUsers(docs.filter(u => u.role === 'student' || u.role === 'vendor'))
+      })
+      return () => { unsubStalls?.(); unsubOrders?.(); unsubUsers?.() }
     }, [])
 
   useEffect(() => {
@@ -154,7 +161,7 @@ export default function AdminDashboard() {
   const kpis = [
     { label: 'Total Orders',   value: periodOrders,                                         raw: periodOrders,  trend: '+12%', color: '#60a5fa',  border: '#2563eb' },
     { label: 'Total Revenue',  value: formatCurrency(periodRevenue),                         raw: null,          trend: '+8%',  color: '#f0b429',  border: '#f0b429' },
-    { label: 'Active Users',   value: periodUsers,                                           raw: periodUsers,   trend: '+5%',  color: '#4ade80',  border: '#16a34a' },
+    { label: 'Active Users',   value: allUsers.length,                                           raw: allUsers.length,   trend: '-',  color: '#4ade80',  border: '#16a34a' },
     { label: 'Active Stalls',  value: activeStallsCount,                                     raw: activeStallsCount, trend: '-', color: '#a78bfa',  border: '#7c3aed' },
   ]
 

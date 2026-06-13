@@ -7,7 +7,7 @@
   signOut,
   updateProfile,
 } from 'firebase/auth'
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, setDoc, getDoc, serverTimestamp, collection, onSnapshot } from 'firebase/firestore'
 import { auth, db } from './firebase'
 
 const STRATHMORE_DOMAIN = '@strathmore.edu'
@@ -165,6 +165,13 @@ export async function logOut() {
 export async function getUserProfile(uid) {
   const snap = await getDoc(doc(db, 'users', uid))
   return snap.exists() ? { uid, ...snap.data() } : null
+}
+
+export function subscribeToUsers(callback) {
+  return onSnapshot(collection(db, 'users'), snap => {
+    const users = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    callback(users)
+  })
 }
 
 export async function signInWithGoogle(role = 'student') {
