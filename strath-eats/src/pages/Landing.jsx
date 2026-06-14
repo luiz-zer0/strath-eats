@@ -154,17 +154,17 @@ export default function Landing() {
           <div className="mt-16 flex gap-12">
             <div className="text-center">
               <p className="text-3xl font-bold text-gold">50+</p>
-              <p className="text-sm text-txs mt-1">Menu items</p>
+              <p className="text-sm text-[var(--text-muted)] mt-1">Menu items</p>
             </div>
             <div className="h-12 w-px bg-bd2"></div>
             <div className="text-center">
               <p className="text-3xl font-bold text-gold">{liveStallCount}</p>
-              <p className="text-sm text-txs mt-1">Stalls live</p>
+              <p className="text-sm text-[var(--text-muted)] mt-1">Stalls live</p>
             </div>
             <div className="h-12 w-px bg-bd2"></div>
             <div className="text-center">
               <p className="text-3xl font-bold text-gold">500+</p>
-              <p className="text-sm text-txs mt-1">Orders placed</p>
+              <p className="text-sm text-[var(--text-muted)] mt-1">Orders placed</p>
             </div>
           </div>
         </div>
@@ -175,16 +175,16 @@ export default function Landing() {
       {showRoleChooser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/60" onClick={() => setShowRoleChooser(false)} />
-          <div className="relative bg-navy-3 border border-bd2 rounded-lg p-8 w-full max-w-md text-center">
+          <div className="relative bg-[var(--bg-card)] border border-bd2 rounded-lg p-8 w-full max-w-md text-center">
             <h3 className="text-xl font-bold text-[var(--text-primary)] mb-4">Sign in as</h3>
-            <p className="text-sm text-txt/80 mb-6">Choose the role that matches your account</p>
+            <p className="text-sm text-[var(--text-body)] mb-6">Choose the role that matches your account</p>
             <div className="grid grid-cols-1 gap-3">
               <button onClick={() => { setShowRoleChooser(false); navigate('/auth', { state: { role: 'student' } }) }} className="py-3 rounded-lg bg-gradient-to-br from-navy-4 to-navy-3 border border-bd2 text-[var(--text-primary)] font-bold">Student</button>
               <button onClick={() => { setShowRoleChooser(false); navigate('/auth', { state: { role: 'staff' } }) }} className="py-3 rounded-lg bg-gradient-to-br from-navy-4 to-navy-3 border border-bd2 text-[var(--text-primary)] font-bold">Staff / Lecturer</button>
               {/* Guest role removed from quick sign-in choices per request */}
               <button onClick={() => { setShowRoleChooser(false); navigate('/vendor') }} className="py-3 rounded-lg bg-transparent border border-bd2 text-gold font-bold">I'm a vendor</button>
             </div>
-            <button onClick={() => setShowRoleChooser(false)} className="mt-6 text-sm text-txt/70">Cancel</button>
+            <button onClick={() => setShowRoleChooser(false)} className="mt-6 text-sm text-[var(--text-muted)]">Cancel</button>
           </div>
         </div>
       )}
@@ -195,7 +195,7 @@ export default function Landing() {
             <h2 className="mt-8 text-5xl font-bold text-[var(--text-primary)]">
               Four simple steps to your meal
             </h2>
-            <p className="mt-6 text-lg text-txt/80 max-w-2xl mx-auto">
+            <p className="mt-6 text-lg text-[var(--text-body)] max-w-2xl mx-auto">
               We've streamlined the whole process so you spend less time ordering and more time eating.
             </p>
           </div>
@@ -213,7 +213,7 @@ export default function Landing() {
                     {step.num}
                   </div>
                   <h3 className="font-bold text-[var(--text-primary)] text-lg mb-3">{step.title}</h3>
-                  <p className="text-sm text-txs leading-relaxed">{step.desc}</p>
+                  <p className="text-sm text-[var(--text-muted)] leading-relaxed">{step.desc}</p>
                 </div>
               </div>
             ))}
@@ -248,7 +248,7 @@ export default function Landing() {
                   {feat.icon}
                 </div>
                 <h3 className="font-bold text-[var(--text-primary)] text-lg mb-2">{feat.title}</h3>
-                <p className="text-sm text-txt/70 leading-relaxed">{feat.desc}</p>
+                <p className="text-sm text-[var(--text-muted)] leading-relaxed">{feat.desc}</p>
               </div>
             ))}
           </div>
@@ -290,7 +290,7 @@ export default function Landing() {
                 <div className="text-6xl mb-6 group-hover:scale-110 transition duration-300 inline-block">
                 </div>
                 <h3 className="font-bold text-[var(--text-primary)] text-xl mb-6">{user.role}</h3>
-                <ul className="space-y-3 text-sm text-txt/80">
+                <ul className="space-y-3 text-sm text-[var(--text-body)]">
                   {user.points.map((point, j) => (
                     <li key={j} className="flex items-center gap-3">
                       {point}
@@ -307,7 +307,7 @@ export default function Landing() {
       <div className="py-20 px-8 bg-navy border-t border-bd">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl font-bold text-[var(--text-primary)] mb-6">Ready to order?</h2>
-          <p className="text-lg text-txt/80 mb-10">
+          <p className="text-lg text-[var(--text-body)] mb-10">
             Join 500+ students already enjoying campus food delivered fast and paid easy.
           </p>
           <div className="flex gap-4 justify-center">
