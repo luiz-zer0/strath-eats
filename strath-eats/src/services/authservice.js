@@ -4,6 +4,7 @@
   signInWithPopup,
   GoogleAuthProvider,
   sendEmailVerification,
+  sendPasswordResetEmail,
   signOut,
   updateProfile,
 } from 'firebase/auth'
@@ -210,4 +211,8 @@ export async function signInWithGoogle(role = 'student') {
   }
 
   return { uid, ...snap.data() }
+}
+
+export async function sendPasswordReset(email) {
+  await sendPasswordResetEmail(auth, email)
 }

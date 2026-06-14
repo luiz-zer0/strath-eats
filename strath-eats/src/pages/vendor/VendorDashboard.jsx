@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useTheme } from '../../context/ThemeContext'
 import { formatCurrency, formatDate } from '../../utils/formatters'
 import {
   buildOrderTrend,
@@ -50,6 +51,7 @@ const NAV = [
 ]
 
 function Sidebar({ tab, setTab, user, pendingCount, onSignOut, sidebarOpen }) {
+  const { toggleTheme, isDark } = useTheme()
   const initials = user
     ? `${(user.firstName || user.name || 'V')[0]}${(user.lastName || '')[0] || ''}`.toUpperCase()
     : 'V'
@@ -94,6 +96,9 @@ function Sidebar({ tab, setTab, user, pendingCount, onSignOut, sidebarOpen }) {
             <div className="vendor-user-role-text">Stall vendor</div>
           </div>
         </div>
+        <button onClick={toggleTheme} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px 10px', width: '100%', textAlign: 'left', color: 'var(--text-dim)', fontFamily: "'Sora', system-ui, sans-serif", fontSize: 11, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8 }}>
+          {isDark ? '\u2600\uFE0F' : '\uD83C\uDF19'} {isDark ? 'Light mode' : 'Dark mode'}
+        </button>
         <button
           onClick={onSignOut}
           className="dash-signout-btn"

@@ -1,7 +1,8 @@
 ﻿import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { signInWithGoogle } from '../services/authservice'
+import { signInWithGoogle, sendPasswordReset } from '../services/authservice'
+import { useTheme } from '../context/ThemeContext'
 import '../styles/auth.css'
 
 const ROLE_CFG = {
@@ -76,6 +77,10 @@ export default function Auth() {
     confirm: '',
   })
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [showResetForm, setShowResetForm] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetSending, setResetSending] = useState(false)
+  const { toggleTheme, isDark } = useTheme()
 
   const set = (field) => (e) => setForm(p => ({ ...p, [field]: e.target.value }))
 
@@ -163,7 +168,10 @@ export default function Auth() {
         <div className="auth-brand">
           Strath<em>Eats</em>
         </div>
-        <button onClick={() => navigate('/')} className="back-btn">Back</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button onClick={toggleTheme} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--text-dim)' }}>{isDark ? '\u2600\uFE0F' : '\uD83C\uDF19'}</button>
+          <button onClick={() => navigate('/')} className="back-btn">Back</button>
+        </div>
       </div>
 
       <div className="auth-body">
@@ -219,6 +227,12 @@ export default function Auth() {
 
               <Input label="Password" type="password" placeholder="Input password" value={form.password} onChange={set('password')} />
 
+              {!isSignUp && (
+                <div style={{ textAlign: 'right', marginTop: -8, marginBottom: 12 }}>
+                  <button type="button" onClick={() => { setShowResetForm(true); setResetEmail(form.email) }} className="link-gold" style={{ fontSize: 11 }}>Forgot password?</button>
+                </div>
+              )}
+
               {isSignUp && (
                 <Input label="Confirm password" type="password" placeholder="Confirm password" value={form.confirm} onChange={set('confirm')} />
               )}
@@ -227,6 +241,28 @@ export default function Auth() {
                 {isSignUp ? 'Create account' : 'Sign in'}
               </button>
             </form>
+
+            {showResetForm && (
+              <div className="auth-card" style={{ marginTop: 12 }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', marginBottom: 4 }}>Reset password</div>
+                <div style={{ fontSize: 11, color: 'var(--text-dim)', marginBottom: 12 }}>Enter your email and we'll send a reset link.</div>
+                <input className="input-dark" type="email" placeholder="Enter email address" value={resetEmail} onChange={e => setResetEmail(e.target.value)} />
+                <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                  <button type="button" className="auth-submit-btn" style={{ flex: 1, marginTop: 0 }} disabled={resetSending} onClick={async () => {
+                    if (!resetEmail) { addToast('Enter your email', 'error'); return }
+                    setResetSending(true)
+                    try {
+                      await sendPasswordReset(resetEmail)
+                      addToast('Reset link sent! Check your email.', 'success')
+                      setShowResetForm(false)
+                    } catch (err) {
+                      addToast(err?.message || 'Failed to send reset email', 'error')
+                    } finally { setResetSending(false) }
+                  }}>{resetSending ? 'Sending...' : 'Send Reset Link'}</button>
+                  <button type="button" className="link-gold" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, padding: '0 8px' }} onClick={() => setShowResetForm(false)}>Cancel</button>
+                </div>
+              </div>
+            )}
           </div>
 
           {!isSignUp && (

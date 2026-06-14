@@ -1,6 +1,7 @@
 ﻿import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useTheme } from '../../context/ThemeContext'
 import { subscribeToStalls } from '../../services/stallService'
 import { subscribeToAllOrders } from '../../services/orderservice'
 import { subscribeToUsers } from '../../services/authservice'
@@ -36,9 +37,11 @@ const NAV = [
   { key: 'overview', label: 'Overview' },
   { key: 'orders',   label: 'All Orders' },
   { key: 'stalls',   label: 'Stalls' },
+  { key: 'users',    label: 'Users & Students' },
 ]
 
 function Sidebar({ tab, setTab, user, onSignOut, sidebarOpen }) {
+  const { toggleTheme, isDark } = useTheme()
   const initials = user
     ? `${(user.firstName || user.name || 'A')[0]}${(user.lastName || '')[0] || ''}`.toUpperCase()
     : 'AD'
@@ -78,6 +81,9 @@ function Sidebar({ tab, setTab, user, onSignOut, sidebarOpen }) {
             <div className="admin-user-role">Platform administrator</div>
           </div>
         </div>
+        <button onClick={toggleTheme} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px 10px', width: '100%', textAlign: 'left', color: 'var(--text-dim)', fontFamily: "'Sora', system-ui, sans-serif", fontSize: 11, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8 }}>
+          {isDark ? '\u2600\uFE0F' : '\uD83C\uDF19'} {isDark ? 'Light mode' : 'Dark mode'}
+        </button>
         <button onClick={onSignOut} className="dash-signout-btn">
            Sign out
         </button>
@@ -132,6 +138,25 @@ export default function AdminDashboard() {
 
   const [period, setPeriod]     = useState('week')
   const [search, setSearch]     = useState('')
+  const [userSearch, setUserSearch] = useState('')
+  const [userStatusFilter, setUserStatusFilter] = useState('all')
+
+  const filteredUsers = useMemo(() => allUsers.filter(u => {
+    const fullName = `${u.firstName || ''} ${u.lastName || ''}`.toLowerCase()
+    const email = (u.email || '').toLowerCase()
+    const searchLower = userSearch.toLowerCase()
+    
+    const matchSearch = !userSearch || fullName.includes(searchLower) || email.includes(searchLower)
+    
+    const isSuspended = u.status === 'suspended'
+    const matchStatus = userStatusFilter === 'all' || 
+                        (userStatusFilter === 'active' && !isSuspended) || 
+                        (userStatusFilter === 'suspended' && isSuspended)
+                        
+    return matchSearch && matchStatus
+  }), [allUsers, userSearch, userStatusFilter])
+
+
   const [statusFilter, setStatusFilter] = useState('all')
   const [stallStatuses, setStallStatuses] = useState(
     Object.fromEntries(stalls.map(s => [s.id, 'active']))
@@ -144,7 +169,9 @@ export default function AdminDashboard() {
     const now = new Date()
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     const weekStart = new Date(todayStart)
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1)
+    const day = weekStart.getDay()
+    const diff = weekStart.getDate() - day + (day === 0 ? -6 : 1) // If Sunday, go back 6 days to Monday
+    weekStart.setDate(diff)
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
     const range = period === 'today' ? todayStart : period === 'week' ? weekStart : monthStart
     return allOrders.filter(o => {
@@ -465,6 +492,97 @@ export default function AdminDashboard() {
     </div>
   )
 
+  const renderUsers = () => (
+    <div>
+      <div className="admin-orders-header">
+        <h1 className="admin-orders-title">Platform Users</h1>
+        <span className="admin-stalls-count">{filteredUsers.length} registered users</span>
+      </div>
+
+      {/* ✨ ADDED: The Search and Filter Bar */}
+      <div className="admin-search-bar">
+        <div className="admin-search-wrap">
+          <input
+            placeholder="Search by student name or email..."
+            value={userSearch}
+            onChange={e => setUserSearch(e.target.value)}
+            className="admin-search-input"
+          />
+        </div>
+        <select
+          value={userStatusFilter}
+          onChange={e => setUserStatusFilter(e.target.value)}
+          className="admin-status-select"
+        >
+          <option value="all">All statuses</option>
+          <option value="active">Active only</option>
+          <option value="suspended">Suspended only</option>
+        </select>
+      </div>
+
+      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* ✨ CHANGED: Now mapping over filteredUsers instead of allUsers */}
+              {filteredUsers.length === 0 ? (
+                <tr className="admin-table-empty"><td colSpan={5}>No users match your search</td></tr>
+              ) : filteredUsers.map((u) => {
+                const isSuspended = u.status === 'suspended'
+                return (
+                  <tr key={u.id}>
+                    <td className="admin-order-student">{u.firstName} {u.lastName}</td>
+                    <td style={{ color: '#94a3b8', fontSize: '13px' }}>{u.email}</td>
+                    <td>
+                      <span className="admin-status-badge" style={{ background: 'rgba(255,255,255,0.05)', color: '#e2e8f0' }}>
+                        {u.role}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="admin-status-badge" style={{
+                        background: isSuspended ? 'rgba(248,113,113,0.12)' : 'rgba(74,222,128,0.12)',
+                        color: isSuspended ? '#f87171' : '#4ade80',
+                      }}>
+                        {isSuspended ? 'Suspended' : 'Active'}
+                      </span>
+                    </td>
+                    <td>
+                      <button 
+                        className={`admin-stall-toggle-btn ${!isSuspended ? 'suspend' : 'reactivate'}`}
+                        onClick={async () => {
+                          try {
+                            const { doc, updateDoc } = await import('firebase/firestore')
+                            const { db } = await import('../../services/firebase')
+                            await updateDoc(doc(db, 'users', u.id), { status: isSuspended ? 'active' : 'suspended' })
+                            addToast(`User ${isSuspended ? 'reactivated' : 'suspended'} successfully`, isSuspended ? 'success' : 'error')
+                          } catch (err) {
+                            addToast('Failed to update user', 'error')
+                            console.error(err)
+                          }
+                        }}
+                      >
+                        {isSuspended ? 'Reactivate' : 'Suspend'}
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+
   return (
     <div className="dash-root">
       <button className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
@@ -477,6 +595,7 @@ export default function AdminDashboard() {
         {tab === 'overview' && renderOverview()}
         {tab === 'orders'   && renderOrders()}
         {tab === 'stalls'   && renderStalls()}
+        {tab === 'users'    && renderUsers()}
       </div>
 
       <div className="toast-container">

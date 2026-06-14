@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
 import { useOrders } from '../../context/OrdersContext'
+import { useTheme } from '../../context/ThemeContext'
 import { subscribeToStalls } from '../../services/stallService'
 import { formatCurrency, formatDate } from '../../utils/formatters'
 import { downloadReceipt } from '../../utils/receipt'
@@ -152,6 +153,7 @@ function UserProfile({ user, role }) {
 }
 
 function Sidebar({ tab, setTab, orders, user, role, onSignOut, sidebarOpen, onToggleSidebar }) {
+  const { toggleTheme, isDark } = useTheme()
   const pendingCount = orders.filter(o => o.st === 'paid' || o.st === 'accepted' || o.st === 'ready').length
   const navItems = [
     { id: 'order',    label: 'Order Food' },
@@ -202,6 +204,9 @@ function Sidebar({ tab, setTab, orders, user, role, onSignOut, sidebarOpen, onTo
               {user?.studentId || user?.staffId || 'View profile'}
             </div>
           </div>
+        </button>
+        <button onClick={toggleTheme} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px 10px', width: '100%', textAlign: 'left', color: 'var(--text-dim)', fontFamily: "'Sora', system-ui, sans-serif", fontSize: 11, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8 }}>
+          {isDark ? '\u2600\uFE0F' : '\uD83C\uDF19'} {isDark ? 'Light mode' : 'Dark mode'}
         </button>
         <button
           onClick={onSignOut}

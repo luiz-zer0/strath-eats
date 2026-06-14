@@ -4,7 +4,7 @@
 .student-sidebar-logo {
   font-size: 16px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .student-sidebar-logo em {
@@ -14,7 +14,7 @@
 
 .student-role-text {
   font-size: 9px;
-  color: #475569;
+  color: var(--text-dimmer);
   margin-top: 3px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -38,18 +38,18 @@
 .student-user-name {
   font-size: 11px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .student-user-id {
   font-size: 9px;
-  color: #475569;
+  color: var(--text-dimmer);
 }
 
 /* Stall cards */
 .stall-card {
-  background: #141d35;
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--bg-card);
+  border: 1px solid var(--border-input);
   border-radius: 16px;
   padding: 20px;
   cursor: pointer;
@@ -64,14 +64,14 @@
 
 .stall-card-name {
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
   font-size: 14px;
   margin-bottom: 4px;
 }
 
 .stall-card-cat {
   font-size: 11px;
-  color: #64748b;
+  color: var(--text-dim);
   margin-bottom: 10px;
 }
 
@@ -86,7 +86,7 @@
   align-items: center;
   gap: 5px;
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .stall-card-dot {
@@ -100,13 +100,13 @@
 
 .stall-card-items {
   font-size: 10px;
-  color: #64748b;
+  color: var(--text-dim);
 }
 
 /* Menu items */
 .menu-item-card {
-  background: #141d35;
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--bg-card);
+  border: 1px solid var(--border-input);
   border-left: 3px solid;
   border-radius: 12px;
   padding: 12px 14px;
@@ -130,7 +130,7 @@
 
 .menu-item-name {
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
   font-size: 13px;
 }
 
@@ -156,7 +156,7 @@
 
 .menu-item-portion-price {
   font-size: 9px;
-  color: #64748b;
+  color: var(--text-dim);
 }
 
 .menu-item-add-btn {
@@ -210,20 +210,20 @@
 .stall-menu-name {
   font-size: 20px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
   line-height: 1.2;
 }
 
 .stall-menu-info {
   font-size: 11px;
-  color: #64748b;
+  color: var(--text-dim);
 }
 
 /* Cart panel */
 .cart-panel-inner {
   width: 280px;
-  background: #0f1729;
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-input);
   border-radius: 16px;
   padding: 20px;
   height: fit-content;
@@ -236,9 +236,9 @@
 
 .cart-header {
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
   font-size: 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
+  border-bottom: 1px solid var(--border-subtle);
   padding-bottom: 12px;
 }
 
@@ -255,7 +255,7 @@
 .cart-empty {
   text-align: center;
   padding: 20px 0;
-  color: #475569;
+  color: var(--text-dimmer);
   font-size: 12px;
 }
 
@@ -271,7 +271,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255,255,255,0.03);
+  background: var(--hover-bg-input);
   border-radius: 10px;
   padding: 8px 10px;
 }
@@ -284,7 +284,7 @@
 .cart-item-name {
   font-size: 11px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -292,7 +292,7 @@
 
 .cart-item-unit {
   font-size: 10px;
-  color: #64748b;
+  color: var(--text-dim);
 }
 
 .cart-qty-controls {
@@ -314,9 +314,9 @@
 }
 
 .cart-qty-btn.sub {
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid var(--border-input);
   background: none;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .cart-qty-btn.add {
@@ -327,7 +327,7 @@
 
 .cart-qty-value {
   font-size: 11px;
-  color: #fff;
+  color: var(--text-primary);
   font-weight: 700;
   min-width: 14px;
   text-align: center;
@@ -345,7 +345,7 @@
 .cart-order-type-label {
   font-size: 10px;
   font-weight: 700;
-  color: #64748b;
+  color: var(--text-dim);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin-bottom: 7px;
@@ -376,7 +376,7 @@
 
 .cart-order-type-btn:not(.active) {
   background: rgba(255,255,255,0.04);
-  color: #94a3b8;
+  color: var(--text-muted);
   border: 1px solid rgba(255,255,255,0.08);
 }
 
@@ -384,7 +384,7 @@
 .cart-pickup-label {
   font-size: 10px;
   font-weight: 700;
-  color: #64748b;
+  color: var(--text-dim);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin-bottom: 7px;
@@ -394,9 +394,9 @@
   width: 100%;
   padding: 9px 12px;
   border-radius: 10px;
-  background: #141d35;
-  border: 1px solid rgba(255,255,255,0.1);
-  color: #e2e8f0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-input);
+  color: var(--text-body);
   font-size: 12px;
   font-family: 'Sora', system-ui, sans-serif;
   outline: none;
@@ -404,7 +404,7 @@
 
 .cart-pickup-hint {
   font-size: 10px;
-  color: #475569;
+  color: var(--text-dimmer);
   margin-top: 4px;
 }
 
@@ -419,7 +419,7 @@
 .cart-total-label {
   font-size: 13px;
   font-weight: 500;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .cart-total-amount {
@@ -456,7 +456,7 @@
 .orders-title {
   font-size: 24px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
   margin-bottom: 20px;
   letter-spacing: -0.02em;
 }
@@ -464,7 +464,7 @@
 .orders-empty {
   text-align: center;
   padding: 60px 0;
-  color: #475569;
+  color: var(--text-dimmer);
 }
 
 .orders-empty-text {
@@ -496,8 +496,8 @@
 }
 
 .order-card {
-  background: #141d35;
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--bg-card);
+  border: 1px solid var(--border-input);
   border-radius: 16px;
   padding: 20px;
 }
@@ -511,20 +511,20 @@
 
 .order-stall-name {
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
   font-size: 15px;
 }
 
 .order-id {
   font-size: 10px;
-  color: #475569;
+  color: var(--text-dimmer);
   font-family: monospace;
   margin-top: 2px;
 }
 
 .order-date {
   font-size: 11px;
-  color: #64748b;
+  color: var(--text-dim);
   margin-top: 2px;
 }
 
@@ -579,7 +579,7 @@
 .order-items-label {
   font-size: 10px;
   font-weight: 700;
-  color: #475569;
+  color: var(--text-dimmer);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin-bottom: 6px;
@@ -589,19 +589,19 @@
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--text-muted);
   padding-bottom: 4px;
 }
 
 .order-item-price {
-  color: #64748b;
+  color: var(--text-dim);
 }
 
 .order-meta {
   display: flex;
   gap: 12px;
   font-size: 11px;
-  color: #475569;
+  color: var(--text-dimmer);
   margin-bottom: 12px;
 }
 
@@ -615,8 +615,8 @@
   font-size: 11px;
   font-weight: 600;
   background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: #94a3b8;
+  border: 1px solid var(--border-input);
+  color: var(--text-muted);
   cursor: pointer;
   font-family: 'Sora', system-ui, sans-serif;
   transition: all 0.13s;
@@ -661,14 +661,14 @@
 .profile-title {
   font-size: 24px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
   margin-bottom: 20px;
   letter-spacing: -0.02em;
 }
 
 .profile-card {
-  background: #141d35;
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--bg-card);
+  border: 1px solid var(--border-input);
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 16px;
@@ -698,12 +698,12 @@
 .profile-name {
   font-size: 18px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .profile-role {
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-dim);
   margin-top: 4px;
 }
 
@@ -717,13 +717,13 @@
 
 .profile-row-label {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .profile-row-value {
   font-size: 12px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 /* Portion modal */
@@ -743,20 +743,20 @@
   padding: 24px;
   width: 100%;
   max-width: 320px;
-  background: #141d35;
+  background: var(--bg-card);
   border: 1px solid rgba(255,255,255,0.12);
 }
 
 .portion-modal-title {
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
   font-size: 16px;
   margin-bottom: 4px;
 }
 
 .portion-modal-hint {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--text-muted);
   margin-bottom: 20px;
 }
 
@@ -782,12 +782,12 @@
 
 .portion-option:not(.selected) {
   border: 1.5px solid rgba(255,255,255,0.1);
-  background: rgba(255,255,255,0.03);
+  background: var(--hover-bg-input);
 }
 
 .portion-option-label {
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
   font-size: 14px;
   text-transform: capitalize;
 }
@@ -823,7 +823,7 @@
   margin-top: 8px;
   background: none;
   border: none;
-  color: #64748b;
+  color: var(--text-dim);
   cursor: pointer;
   font-size: 12px;
   font-weight: 500;
@@ -862,14 +862,14 @@
 
 .user-profile-display-name {
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
   font-size: 14px;
   line-height: 1.2;
 }
 
 .user-profile-role-label {
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-dim);
   margin-top: 2px;
 }
 
@@ -882,7 +882,7 @@
 
 .user-profile-detail-label {
   font-size: 10px;
-  color: #64748b;
+  color: var(--text-dim);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-weight: 700;
@@ -890,14 +890,14 @@
 
 .user-profile-detail-value {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 /* Stall count header */
 .stall-count-header {
   font-size: 11px;
   font-weight: 700;
-  color: #64748b;
+  color: var(--text-dim);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 12px;

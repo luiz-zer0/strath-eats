@@ -5,8 +5,8 @@ const CartContext = createContext()
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([])
   const [selectedStall, setSelectedStall] = useState(null)
-  const [orderMode, setOrderMode] = useState('Dine-in')
-  const [pickupTime, setPickupTime] = useState('12:30')
+  const [orderMode, setOrderMode] = useState('')
+  const [pickupTime, setPickupTime] = useState('')
 
   // item shape: { id, nm, pr, cat, portion: 'half'|'full'|null, cartKey }
   // cartKey = id + '-' + portion so half and full can coexist

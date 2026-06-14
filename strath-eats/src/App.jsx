@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
 import { OrdersProvider } from './context/OrdersContext'
@@ -17,6 +18,7 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 function App() {
   return (
     <Router>
+      <ThemeProvider>
       <AuthProvider>
         <CartProvider>
           <OrdersProvider>
@@ -37,6 +39,7 @@ function App() {
           </OrdersProvider>
         </CartProvider>
       </AuthProvider>
+      </ThemeProvider>
     </Router>
   )
 }
