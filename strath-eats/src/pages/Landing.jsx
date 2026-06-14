@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Pill } from '../components/common/Pill'
 import { Button } from '../components/common/Button'
 import { subscribeToStalls } from '../services/stallService'
+import ThemeToggle from '../components/ThemeToggle'
 
 export default function Landing() {
   const navigate = useNavigate()
@@ -108,6 +109,8 @@ export default function Landing() {
               Strath<em className="text-gold not-italic">Eats</em>
             </div>
           </div>
+
+          <ThemeToggle />
           <div className="flex items-center gap-6">
             <button onClick={() => document.getElementById('journey-sec')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm text-txt hover:text-gold transition duration-200">
               How it works
