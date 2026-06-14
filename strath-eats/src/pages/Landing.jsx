@@ -21,7 +21,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-navy">
       {/* Hero Section */}
-      <div className="relative min-h-screen flex flex-col overflow-hidden bg-gradient-to-b from-navy via-navy-2 to-navy-3">
+      <div className="relative min-h-screen flex flex-col overflow-hidden bg-navy">
         {/* Background SVG */}
         <div className="absolute inset-0 -z-10">
           <svg
@@ -99,7 +99,7 @@ export default function Landing() {
         </div>
 
         {/* Dark Overlay for better text contrast */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/50 -z-10"></div>
+        <div className="absolute inset-0 -z-10 style={{ background: 'var(--bg-overlay)' }}"></div>
 
         {/* Navigation */}
         <nav className="relative z-10 flex items-center justify-between px-8 py-6 border-b border-bd">
