@@ -179,8 +179,8 @@ export default function Landing() {
             <h3 className="text-xl font-bold text-[var(--text-primary)] mb-4">Sign in as</h3>
             <p className="text-sm text-[var(--text-body)] mb-6">Choose the role that matches your account</p>
             <div className="grid grid-cols-1 gap-3">
-              <button onClick={() => { setShowRoleChooser(false); navigate('/auth', { state: { role: 'student' } }) }} className="py-3 rounded-lg bg-gradient-to-br from-navy-4 to-navy-3 border border-bd2 text-[var(--text-primary)] font-bold">Student</button>
-              <button onClick={() => { setShowRoleChooser(false); navigate('/auth', { state: { role: 'staff' } }) }} className="py-3 rounded-lg bg-gradient-to-br from-navy-4 to-navy-3 border border-bd2 text-[var(--text-primary)] font-bold">Staff / Lecturer</button>
+              <button onClick={() => { setShowRoleChooser(false); navigate('/auth', { state: { role: 'student' } }) }} className="py-3 rounded-lg bg-[var(--bg-card)] from-navy-4 to-navy-3 border border-bd2 text-[var(--text-primary)] font-bold">Student</button>
+              <button onClick={() => { setShowRoleChooser(false); navigate('/auth', { state: { role: 'staff' } }) }} className="py-3 rounded-lg bg-[var(--bg-card)] from-navy-4 to-navy-3 border border-bd2 text-[var(--text-primary)] font-bold">Staff / Lecturer</button>
               {/* Guest role removed from quick sign-in choices per request */}
               <button onClick={() => { setShowRoleChooser(false); navigate('/vendor') }} className="py-3 rounded-lg bg-transparent border border-bd2 text-gold font-bold">I'm a vendor</button>
             </div>
@@ -208,8 +208,8 @@ export default function Landing() {
               { num: '4', title: 'Pick up', desc: 'Order ready notification' },
             ].map((step) => (
               <div key={step.num} className="relative group">
-                <div className="bg-gradient-to-br from-navy-3 to-navy-4 border border-bd2 rounded-lg p-8 hover:border-gold/50 transition duration-300 h-full">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-gold to-gold-2 text-navy font-bold flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition duration-300">
+                <div className="bg-[var(--bg-card)] from-navy-3 to-navy-4 border border-bd2 rounded-lg p-8 hover:border-gold/50 transition duration-300 h-full">
+                  <div className="w-14 h-14 rounded-full bg-[var(--bg-card)] from-gold to-gold-2 text-navy font-bold flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition duration-300">
                     {step.num}
                   </div>
                   <h3 className="font-bold text-[var(--text-primary)] text-lg mb-3">{step.title}</h3>
@@ -242,7 +242,7 @@ export default function Landing() {
             ].map((feat, i) => (
               <div
                 key={i}
-                className="bg-gradient-to-br from-navy-3 via-navy-3 to-navy-4 border border-bd2 rounded-lg p-8 hover:border-gold/50 hover:from-navy-4 transition duration-300 group"
+                className="bg-[var(--bg-card)] from-navy-3 via-navy-3 to-navy-4 border border-bd2 rounded-lg p-8 hover:border-gold/50 hover:from-navy-4 transition duration-300 group"
               >
                 <div className="text-4xl mb-4 group-hover:scale-110 transition duration-300 inline-block">
                   {feat.icon}
@@ -285,7 +285,7 @@ export default function Landing() {
             ].map((user, i) => (
               <div
                 key={i}
-                className="bg-gradient-to-br from-navy-3 to-navy-4 border border-bd2 rounded-lg p-10 text-center hover:border-gold/50 transition duration-300 group"
+                className="bg-[var(--bg-card)] from-navy-3 to-navy-4 border border-bd2 rounded-lg p-10 text-center hover:border-gold/50 transition duration-300 group"
               >
                 <div className="text-6xl mb-6 group-hover:scale-110 transition duration-300 inline-block">
                 </div>
