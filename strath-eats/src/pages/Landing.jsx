@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate ,Link } from 'react-router-dom'
 import { Pill } from '../components/common/Pill'
 import { Button } from '../components/common/Button'
 import { subscribeToStalls } from '../services/stallService'
@@ -326,12 +326,14 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto">
           <div className="mb-8 flex items-center justify-center gap-2">
             <span className="text-2xl"></span>
-            <div 
+            <Link 
+              to="/"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="text-xl font-bold text-[var(--text-primary)] tracking-tight cursor-pointer hover:opacity-80 transition-opacity"
+              className="text-xl font-bold text-[var(--text-primary)] tracking-tight hover:opacity-80 transition-opacity select-none"
+              style={{ textDecoration: 'none' }}
             >
               Strath<em className="text-gold not-italic">Eats</em>
-            </div>
+            </Link>
           </div>
           <p className="mb-6"> 2026 StrathEats. Making campus food simple, fast, and delicious.</p>
           {/* Admin access intentionally hidden from footer to avoid public exposure. Use direct /admin route when needed. */}

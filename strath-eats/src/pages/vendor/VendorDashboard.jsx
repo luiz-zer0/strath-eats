@@ -62,12 +62,13 @@ function Sidebar({ tab, setTab, user, pendingCount, onSignOut, sidebarOpen }) {
   return (
     <div className={`dash-sidebar${sidebarOpen ? ' open' : ''}`} style={{ width: 200 }}>
       <div className="dash-logo-area">
-        <div 
-            onClick={() => navigate('/')}
-            className="text-xl font-bold text-[var(--text-primary)] tracking-tight cursor-pointer hover:opacity-80 transition-opacity"
-          >
-            Strath<em className="text-gold not-italic">Eats</em>
-          </div>
+        <Link 
+          to="/"
+          className="text-lg font-bold text-[var(--text-primary)] hover:opacity-80 transition-opacity select-none"
+          style={{ textDecoration: 'none' }}
+        >
+          Strath<em className="text-gold not-italic">Eats</em>
+        </Link>
         <div className="vendor-role-text">
           Vendor Portal
         </div>

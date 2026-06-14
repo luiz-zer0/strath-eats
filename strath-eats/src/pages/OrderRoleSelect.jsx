@@ -1,5 +1,5 @@
 ﻿import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Button } from '../components/common/Button'
 
@@ -22,12 +22,13 @@ export default function OrderRoleSelect() {
     <div className="min-h-screen bg-navy flex flex-col">
       {/* Top Bar */}
       <div className="border-b border-bd px-7 py-4 flex items-center justify-between">
-        <div 
-          onClick={() => navigate('/')}
-          className="text-lg font-bold text-[var(--text-primary)] cursor-pointer hover:opacity-80 transition-opacity"
+        <Link 
+          to="/"
+          className="text-lg font-bold text-[var(--text-primary)] hover:opacity-80 transition-opacity select-none"
+          style={{ textDecoration: 'none' }}
         >
           Strath<em className="text-gold not-italic">Eats</em>
-        </div>
+        </Link>
         <button
           onClick={() => navigate('/')}
           className="text-[var(--text-muted)] hover:text-gold transition"

@@ -1,5 +1,5 @@
 ﻿import { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { signInWithGoogle, sendPasswordReset } from '../services/authservice'
 import { useTheme } from '../context/ThemeContext'
@@ -165,13 +165,13 @@ export default function Auth() {
   return (
     <div className="auth-page">
       <div className="auth-topbar">
-        <div 
+        <Link 
+          to="/"
           className="auth-brand" 
-          onClick={() => navigate('/')}
-          style={{ cursor: 'pointer' }}
+          style={{ textDecoration: 'none', userSelect: 'none' }}
         >
           Strath<em>Eats</em>
-        </div>
+        </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button onClick={toggleTheme} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--text-dim)' }}>{isDark ? '\u2600\uFE0F' : '\uD83C\uDF19'}</button>
           <button onClick={() => navigate('/')} className="back-btn">Back</button>
