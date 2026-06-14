@@ -21,10 +21,10 @@ export default function OrderRoleSelect() {
   return (
     <div className="min-h-screen bg-navy flex flex-col">
       {/* Top Bar */}
-      <div className="border-b border-bd px-7 py-4 flex items-center justify-between">
+      <div className="border-b border-bd px-7 py-4 flex items-center justify-between relative z-50">
         <Link 
           to="/"
-          className="text-lg font-bold text-[var(--text-primary)] hover:opacity-80 transition-opacity select-none"
+          className="text-lg font-bold text-[var(--text-primary)] hover:opacity-80 transition-opacity select-none cursor-pointer block"
           style={{ textDecoration: 'none' }}
         >
           Strath<em className="text-gold not-italic">Eats</em>

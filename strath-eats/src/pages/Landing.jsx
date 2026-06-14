@@ -101,14 +101,16 @@ export default function Landing() {
         {/* Dark Overlay for better text contrast */}
         <div className="absolute inset-0 -z-10 style={{ background: 'var(--bg-overlay)' }}"></div>
 
+        
         {/* Navigation */}
-        <nav className="relative z-10 flex items-center justify-between px-8 py-6 border-b border-bd">
-          <div className="flex items-center gap-2.5">
-            <span className="text-3xl"></span>
-            <div className="text-xl font-bold text-[var(--text-primary)] tracking-tight">
-              Strath<em className="text-gold not-italic">Eats</em>
-            </div>
-          </div>
+        <nav className="relative z-50 flex items-center justify-between px-8 py-6 border-b border-bd bg-[var(--bg-page)]">
+          <Link 
+            to="/" 
+            className="flex items-center gap-2.5 text-xl font-bold text-[var(--text-primary)] tracking-tight hover:opacity-80 transition-opacity select-none cursor-pointer"
+            style={{ textDecoration: 'none' }}
+          >
+            Strath<em className="text-gold not-italic">Eats</em>
+          </Link>
 
           
           <div className="flex items-center gap-6">

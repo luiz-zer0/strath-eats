@@ -164,11 +164,11 @@ export default function Auth() {
 
   return (
     <div className="auth-page">
-      <div className="auth-topbar">
+      <div className="auth-topbar relative z-50">
         <Link 
           to="/"
           className="auth-brand" 
-          style={{ textDecoration: 'none', userSelect: 'none' }}
+          style={{ textDecoration: 'none', userSelect: 'none', cursor: 'pointer', display: 'block' }}
         >
           Strath<em>Eats</em>
         </Link>

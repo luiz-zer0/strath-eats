@@ -64,7 +64,7 @@ function Sidebar({ tab, setTab, user, pendingCount, onSignOut, sidebarOpen }) {
       <div className="dash-logo-area">
         <Link 
           to="/"
-          className="text-lg font-bold text-[var(--text-primary)] hover:opacity-80 transition-opacity select-none"
+          className="text-lg font-bold text-[var(--text-primary)] hover:opacity-80 transition-opacity select-none cursor-pointer block relative z-50"
           style={{ textDecoration: 'none' }}
         >
           Strath<em className="text-gold not-italic">Eats</em>
