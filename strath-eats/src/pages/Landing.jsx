@@ -105,13 +105,14 @@ export default function Landing() {
         <nav className="relative z-10 flex items-center justify-between px-8 py-6 border-b border-bd">
           <div className="flex items-center gap-2.5">
             <span className="text-3xl"></span>
-            <div className="text-xl font-bold text-white tracking-tight">
+            <div className="text-xl font-bold text-[var(--text-primary)] tracking-tight">
               Strath<em className="text-gold not-italic">Eats</em>
             </div>
           </div>
 
-          <ThemeToggle />
+          
           <div className="flex items-center gap-6">
+            <ThemeToggle />
             <button onClick={() => document.getElementById('journey-sec')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm text-txt hover:text-gold transition duration-200">
               How it works
             </button>
@@ -131,7 +132,7 @@ export default function Landing() {
             {liveStallCount} stalls live now
           </Pill>
 
-          <h1 className="mt-12 text-6xl font-bold text-white leading-tight max-w-4xl tracking-tight">
+          <h1 className="mt-12 text-6xl font-bold text-[var(--text-primary)] leading-tight max-w-4xl tracking-tight">
             Campus food,<br />
             <span className="text-gold">on your terms.</span>
           </h1>
@@ -175,11 +176,11 @@ export default function Landing() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/60" onClick={() => setShowRoleChooser(false)} />
           <div className="relative bg-navy-3 border border-bd2 rounded-lg p-8 w-full max-w-md text-center">
-            <h3 className="text-xl font-bold text-white mb-4">Sign in as</h3>
+            <h3 className="text-xl font-bold text-[var(--text-primary)] mb-4">Sign in as</h3>
             <p className="text-sm text-txt/80 mb-6">Choose the role that matches your account</p>
             <div className="grid grid-cols-1 gap-3">
-              <button onClick={() => { setShowRoleChooser(false); navigate('/auth', { state: { role: 'student' } }) }} className="py-3 rounded-lg bg-gradient-to-br from-navy-4 to-navy-3 border border-bd2 text-white font-bold">Student</button>
-              <button onClick={() => { setShowRoleChooser(false); navigate('/auth', { state: { role: 'staff' } }) }} className="py-3 rounded-lg bg-gradient-to-br from-navy-4 to-navy-3 border border-bd2 text-white font-bold">Staff / Lecturer</button>
+              <button onClick={() => { setShowRoleChooser(false); navigate('/auth', { state: { role: 'student' } }) }} className="py-3 rounded-lg bg-gradient-to-br from-navy-4 to-navy-3 border border-bd2 text-[var(--text-primary)] font-bold">Student</button>
+              <button onClick={() => { setShowRoleChooser(false); navigate('/auth', { state: { role: 'staff' } }) }} className="py-3 rounded-lg bg-gradient-to-br from-navy-4 to-navy-3 border border-bd2 text-[var(--text-primary)] font-bold">Staff / Lecturer</button>
               {/* Guest role removed from quick sign-in choices per request */}
               <button onClick={() => { setShowRoleChooser(false); navigate('/vendor') }} className="py-3 rounded-lg bg-transparent border border-bd2 text-gold font-bold">I'm a vendor</button>
             </div>
@@ -191,7 +192,7 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-20">
             <Pill>How it works</Pill>
-            <h2 className="mt-8 text-5xl font-bold text-white">
+            <h2 className="mt-8 text-5xl font-bold text-[var(--text-primary)]">
               Four simple steps to your meal
             </h2>
             <p className="mt-6 text-lg text-txt/80 max-w-2xl mx-auto">
@@ -211,7 +212,7 @@ export default function Landing() {
                   <div className="w-14 h-14 rounded-full bg-gradient-to-br from-gold to-gold-2 text-navy font-bold flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition duration-300">
                     {step.num}
                   </div>
-                  <h3 className="font-bold text-white text-lg mb-3">{step.title}</h3>
+                  <h3 className="font-bold text-[var(--text-primary)] text-lg mb-3">{step.title}</h3>
                   <p className="text-sm text-txs leading-relaxed">{step.desc}</p>
                 </div>
               </div>
@@ -225,7 +226,7 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-20">
             <Pill>Powerful features</Pill>
-            <h2 className="mt-8 text-5xl font-bold text-white">
+            <h2 className="mt-8 text-5xl font-bold text-[var(--text-primary)]">
               Everything for seamless ordering
             </h2>
           </div>
@@ -246,7 +247,7 @@ export default function Landing() {
                 <div className="text-4xl mb-4 group-hover:scale-110 transition duration-300 inline-block">
                   {feat.icon}
                 </div>
-                <h3 className="font-bold text-white text-lg mb-2">{feat.title}</h3>
+                <h3 className="font-bold text-[var(--text-primary)] text-lg mb-2">{feat.title}</h3>
                 <p className="text-sm text-txt/70 leading-relaxed">{feat.desc}</p>
               </div>
             ))}
@@ -259,7 +260,7 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-20">
             <Pill>Built for everyone</Pill>
-            <h2 className="mt-8 text-5xl font-bold text-white">
+            <h2 className="mt-8 text-5xl font-bold text-[var(--text-primary)]">
               A platform for the entire campus
             </h2>
           </div>
@@ -288,7 +289,7 @@ export default function Landing() {
               >
                 <div className="text-6xl mb-6 group-hover:scale-110 transition duration-300 inline-block">
                 </div>
-                <h3 className="font-bold text-white text-xl mb-6">{user.role}</h3>
+                <h3 className="font-bold text-[var(--text-primary)] text-xl mb-6">{user.role}</h3>
                 <ul className="space-y-3 text-sm text-txt/80">
                   {user.points.map((point, j) => (
                     <li key={j} className="flex items-center gap-3">
@@ -305,7 +306,7 @@ export default function Landing() {
       {/* CTA Section */}
       <div className="py-20 px-8 bg-navy border-t border-bd">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-white mb-6">Ready to order?</h2>
+          <h2 className="text-4xl font-bold text-[var(--text-primary)] mb-6">Ready to order?</h2>
           <p className="text-lg text-txt/80 mb-10">
             Join 500+ students already enjoying campus food delivered fast and paid easy.
           </p>
@@ -325,7 +326,7 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto">
           <div className="mb-8 flex items-center justify-center gap-2">
             <span className="text-2xl"></span>
-            <div className="font-bold text-white text-lg">
+            <div className="font-bold text-[var(--text-primary)] text-lg">
               Strath<em className="text-gold not-italic">Eats</em>
             </div>
           </div>
