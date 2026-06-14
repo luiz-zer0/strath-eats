@@ -326,7 +326,10 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto">
           <div className="mb-8 flex items-center justify-center gap-2">
             <span className="text-2xl"></span>
-            <div className="font-bold text-[var(--text-primary)] text-lg">
+            <div 
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="text-xl font-bold text-[var(--text-primary)] tracking-tight cursor-pointer hover:opacity-80 transition-opacity"
+            >
               Strath<em className="text-gold not-italic">Eats</em>
             </div>
           </div>

@@ -49,9 +49,12 @@ function Sidebar({ tab, setTab, user, onSignOut, sidebarOpen }) {
   return (
     <div className={`dash-sidebar${sidebarOpen ? ' open' : ''}`}>
       <div className="dash-logo-area">
-        <div className="admin-sidebar-logo">
-          Strath<em>Eats</em>
-        </div>
+        <div 
+            onClick={() => navigate('/')}
+            className="text-xl font-bold text-[var(--text-primary)] tracking-tight cursor-pointer hover:opacity-80 transition-opacity"
+          >
+            Strath<em className="text-gold not-italic">Eats</em>
+          </div>
         <div className="admin-role-badge">
           <span className="admin-role-dot"></span>
           <span className="admin-role-text">Admin Portal</span>

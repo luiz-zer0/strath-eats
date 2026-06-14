@@ -22,12 +22,15 @@ export default function OrderRoleSelect() {
     <div className="min-h-screen bg-navy flex flex-col">
       {/* Top Bar */}
       <div className="border-b border-bd px-7 py-4 flex items-center justify-between">
-        <div className="text-lg font-bold text-white">
+        <div 
+          onClick={() => navigate('/')}
+          className="text-lg font-bold text-[var(--text-primary)] cursor-pointer hover:opacity-80 transition-opacity"
+        >
           Strath<em className="text-gold not-italic">Eats</em>
         </div>
         <button
           onClick={() => navigate('/')}
-          className="text-txs hover:text-gold transition"
+          className="text-[var(--text-muted)] hover:text-gold transition"
         >
           Go Back
         </button>
@@ -36,10 +39,10 @@ export default function OrderRoleSelect() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col items-center justify-center px-7 py-16">
         <div className="max-w-md w-full">
-          <h1 className="text-3xl font-bold text-white mb-3 text-center">
+          <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-3 text-center">
             How are you here today?
           </h1>
-          <p className="text-txs text-center mb-12 leading-relaxed">
+          <p className="text-[var(--text-muted)] text-center mb-12 leading-relaxed">
             Select your role to sign in or create an account
           </p>
 
@@ -57,8 +60,8 @@ export default function OrderRoleSelect() {
                 <div className="flex items-start gap-4">
                   <div className="text-2xl">{role.icon}</div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-white">{role.name}</h3>
-                    <p className="text-11px text-txs">{role.desc}</p>
+                    <h3 className="font-bold text-[var(--text-primary)]">{role.name}</h3>
+                    <p className="text-11px text-[var(--text-muted)]">{role.desc}</p>
                   </div>
                   {selectedRole === role.id && (
                     <div className="w-5 h-5 rounded-full bg-gold flex items-center justify-center flex-shrink-0">
@@ -77,7 +80,7 @@ export default function OrderRoleSelect() {
             Continue
           </Button>
 
-          <p className="text-11px text-txtd text-center mt-6">
+          <p className="text-11px text-[var(--text-muted)] text-center mt-6">
             Opening a stall? <button onClick={() => navigate('/vendor')} className="text-gold hover:text-gold-2">Go here</button>
           </p>
         </div>

@@ -164,9 +164,12 @@ function Sidebar({ tab, setTab, orders, user, role, onSignOut, sidebarOpen, onTo
   return (
     <div className={`dash-sidebar${sidebarOpen ? ' open' : ''}`} style={{ width: 200 }}>
       <div className="dash-logo-area">
-        <div className="student-sidebar-logo">
-          Strath<em>Eats</em>
-        </div>
+        <div 
+            onClick={() => navigate('/')}
+            className="text-xl font-bold text-[var(--text-primary)] tracking-tight cursor-pointer hover:opacity-80 transition-opacity"
+          >
+            Strath<em className="text-gold not-italic">Eats</em>
+          </div>
         <div className="student-role-text">
           {role === 'staff' ? 'Staff Portal' : role === 'other' ? 'Guest Portal' : 'Student Portal'}
         </div>

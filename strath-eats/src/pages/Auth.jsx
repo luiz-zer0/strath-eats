@@ -165,7 +165,11 @@ export default function Auth() {
   return (
     <div className="auth-page">
       <div className="auth-topbar">
-        <div className="auth-brand">
+        <div 
+          className="auth-brand" 
+          onClick={() => navigate('/')}
+          style={{ cursor: 'pointer' }}
+        >
           Strath<em>Eats</em>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
