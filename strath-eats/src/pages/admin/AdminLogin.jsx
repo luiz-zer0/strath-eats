@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useTheme } from '../../context/ThemeContext'
 import { useToast } from '../../components/common/Toast'
 import { Button } from '../../components/common/Button'
+import { sendPasswordReset } from '../../services/authservice'
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@stratheats.com'
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'admin'
@@ -11,11 +13,15 @@ export default function AdminLogin() {
   const navigate = useNavigate()
   const { login } = useAuth()
   const { addToast } = useToast()
+  const { toggleTheme, isDark } = useTheme()
 
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   })
+  const [showResetForm, setShowResetForm] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetSending, setResetSending] = useState(false)
 
   const handleChange = (e) => {
     setFormData({
@@ -48,12 +54,19 @@ export default function AdminLogin() {
 
   return (
     <div className="min-h-screen bg-navy flex flex-col">
-      <div className="border-b border-bd px-7 py-4">
+      <div className="border-b border-bd px-7 py-4 flex items-center justify-between">
         <button
           onClick={() => navigate('/')}
           className="text-txs hover:text-gold transition"
         >
           ← Back
+        </button>
+        <button
+          onClick={toggleTheme}
+          className="text-txs hover:text-gold transition"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}
+        >
+          {isDark ? '\u2600\uFE0F' : '\uD83C\uDF19'}
         </button>
       </div>
 
@@ -95,10 +108,65 @@ export default function AdminLogin() {
               />
             </div>
 
+            <div className="text-right" style={{ marginTop: -8 }}>
+              <button
+                type="button"
+                onClick={() => { setShowResetForm(true); setResetEmail(formData.email) }}
+                className="text-txs hover:text-gold transition"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 11, fontWeight: 700 }}
+              >
+                Forgot password?
+              </button>
+            </div>
+
             <Button type="submit" className="w-full">
               Sign In
             </Button>
           </form>
+
+          {showResetForm && (
+            <div className="bg-navy-3 border border-bd2 rounded-sm p-4" style={{ marginTop: 12 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', marginBottom: 4 }}>Reset password</div>
+              <div style={{ fontSize: 11, color: 'var(--text-dim)', marginBottom: 12 }}>Enter your admin email and we'll send a reset link.</div>
+              <input
+                type="email"
+                placeholder="Enter admin email"
+                value={resetEmail}
+                onChange={e => setResetEmail(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-sm bg-navy-3 border border-bd2 text-white placeholder-txs focus:outline-none focus:border-gold"
+                style={{ fontFamily: 'inherit', fontSize: 12 }}
+              />
+              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                <button
+                  type="button"
+                  disabled={resetSending}
+                  onClick={async () => {
+                    if (!resetEmail) { addToast('Enter your email', 'error'); return }
+                    setResetSending(true)
+                    try {
+                      await sendPasswordReset(resetEmail)
+                      addToast('Reset link sent! Check your email.', 'success')
+                      setShowResetForm(false)
+                    } catch (err) {
+                      addToast(err?.message || 'Failed to send reset email', 'error')
+                    } finally { setResetSending(false) }
+                  }}
+                  className="flex-1 px-4 py-2.5 rounded-sm bg-gold text-navy font-bold cursor-pointer"
+                  style={{ border: 'none', fontFamily: 'inherit', fontSize: 12 }}
+                >
+                  {resetSending ? 'Sending...' : 'Send Reset Link'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowResetForm(false)}
+                  className="text-txs hover:text-gold transition"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, padding: '0 8px' }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
 
           <p className="text-11px text-txtd text-center mt-6">
             Demo: {ADMIN_EMAIL} / {ADMIN_PASSWORD}
