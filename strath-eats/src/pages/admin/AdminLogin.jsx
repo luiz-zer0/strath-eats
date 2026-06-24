@@ -72,7 +72,7 @@ export default function AdminLogin() {
 
       <div className="flex-1 flex items-center justify-center px-7 py-16">
         <div className="max-w-sm w-full">
-          <h1 className="text-3xl font-bold text-white mb-2 text-center">
+          <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2 text-center">
             Admin Portal
           </h1>
           <p className="text-txs text-center mb-8 text-txs">
@@ -89,7 +89,7 @@ export default function AdminLogin() {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-sm bg-navy-3 border border-bd2 text-white placeholder-txs focus:outline-none focus:border-gold"
+                className="w-full px-4 py-2.5 rounded-sm bg-navy-3 border border-bd2 text-[var(--text-primary)] placeholder-txs focus:outline-none focus:border-gold"
                 placeholder="admin@stratheats.com"
               />
             </div>
@@ -103,17 +103,17 @@ export default function AdminLogin() {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-sm bg-navy-3 border border-bd2 text-white placeholder-txs focus:outline-none focus:border-gold"
+                className="w-full px-4 py-2.5 rounded-sm bg-navy-3 border border-bd2 text-[var(--text-primary)] placeholder-txs focus:outline-none focus:border-gold"
                 placeholder="••••••••"
               />
             </div>
 
-            <div className="text-right" style={{ marginTop: -8 }}>
+            <div className="flex justify-end mt-2">
               <button
                 type="button"
                 onClick={() => { setShowResetForm(true); setResetEmail(formData.email) }}
-                className="text-txs hover:text-gold transition"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 11, fontWeight: 700 }}
+                className="text-txs hover:text-gold transition font-bold cursor-pointer"
+                style={{ background: 'none', border: 'none', fontSize: 12 }}
               >
                 Forgot password?
               </button>
@@ -133,7 +133,7 @@ export default function AdminLogin() {
                 placeholder="Enter admin email"
                 value={resetEmail}
                 onChange={e => setResetEmail(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-sm bg-navy-3 border border-bd2 text-white placeholder-txs focus:outline-none focus:border-gold"
+                className="w-full px-4 py-2.5 rounded-sm bg-navy-3 border border-bd2 text-[var(--text-primary)] placeholder-txs focus:outline-none focus:border-gold"
                 style={{ fontFamily: 'inherit', fontSize: 12 }}
               />
               <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
