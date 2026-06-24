@@ -213,19 +213,20 @@ export default function VendorDashboard() {
         if (!active) return
         setLoadingStall(false)
         if (stallDoc) {
-          const mergedDraft = cachedDraft
+          const freshDraft = readVendorDraft(resolvedStallId)
+          const mergedDraft = freshDraft
             ? {
                 ...stallDoc,
-                ...cachedDraft,
-                menu: Array.isArray(cachedDraft.menu) ? cachedDraft.menu : (stallDoc.menu || []),
+                ...freshDraft,
+                menu: Array.isArray(freshDraft.menu) ? freshDraft.menu : (stallDoc.menu || []),
               }
             : stallDoc
           hydrateStallState(mergedDraft)
-          if (!cachedDraft) {
+          if (!freshDraft) {
             writeVendorDraft(resolvedStallId, stallDoc)
           }
         } else {
-          if (cachedDraft) {
+          if (readVendorDraft(resolvedStallId)) {
             setFirestoreError('Stall not found in Firestore — showing local cache. Menu items may be outdated.')
           } else {
             setFirestoreError('Stall not found. Please contact support.')
@@ -553,7 +554,7 @@ export default function VendorDashboard() {
                     addToast('Item removed','info')
                   }}
                   className="vendor-menu-delete-btn"
-                ></button>
+                >×</button>
               </div>
             </div>
           ))}
