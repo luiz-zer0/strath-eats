@@ -481,7 +481,7 @@ export default function VendorDashboard() {
                     <button onClick={() => handleConfirm(order.id)} className="btn-sm btn-confirm"> Confirm</button>
                     <button onClick={() => handleReject(order.id)} className="btn-sm btn-reject"> Cancel</button>
                   </>}
-                  {order.st === 'accepted' && order.rm && (
+                  {order.st === 'accepted' && (
                     <button onClick={() => handlePreparing(order.id)} className="vendor-action-btn prepare"> Prepare</button>
                   )}
                   {order.st === 'preparing' && (
