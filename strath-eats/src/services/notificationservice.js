@@ -29,6 +29,6 @@ export function getStatusNotificationData(order, newStatus) {
   if (!fn) return null
   return {
     title: 'StrathEats',
-    body: fn(order.stallName || 'Stall'),
+    body: fn(order.stallName || 'Cafeteria'),
   }
 }

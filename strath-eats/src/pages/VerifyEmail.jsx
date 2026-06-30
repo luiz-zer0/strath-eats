@@ -101,7 +101,7 @@ export default function VerifyEmail() {
         </button>
 
         <button
-          onClick={() => navigate('/auth')}
+          onClick={() => navigate(roleHint === 'vendor' ? '/vendor' : (roleHint === 'admin' ? '/admin' : '/auth'))}
           className="verify-btn-ghost"
         >
           Back To Sign In

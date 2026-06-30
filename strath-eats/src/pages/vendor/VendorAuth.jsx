@@ -32,7 +32,7 @@ export default function VendorAuth() {
     }
 
     if (isSignUp && !formData.stallName) {
-      addToast('Please enter your stall name', 'error')
+      addToast('Please enter your cafeteria name', 'error')
       return
     }
 
@@ -52,7 +52,7 @@ export default function VendorAuth() {
           navigate('/verify-email', { state: { email: formData.email, role: 'vendor' } })
         })
         .catch((err) => {
-          addToast(err?.message || 'Could not open stall', 'error')
+          addToast(err?.message || 'Could not open cafeteria', 'error')
         })
       return
     }
@@ -86,19 +86,19 @@ export default function VendorAuth() {
       <div className="flex-1 flex items-center justify-center px-7 py-16">
         <div className="max-w-sm w-full">
           <h1 className="text-3xl font-bold text-white mb-2 text-center">
-            {isSignUp ? 'Open Your Stall' : 'Vendor Sign In'}
+            {isSignUp ? 'Open Your Cafeteria' : 'Vendor Sign In'}
           </h1>
           <p className="text-txs text-center mb-8">
             {isSignUp
-              ? 'Get your stall live on StrathEats'
-              : 'Manage your stall and orders'}
+              ? 'Get your cafeteria live on StrathEats'
+              : 'Manage your cafeteria and orders'}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
               <div>
                 <label className="block text-11px font-bold text-txs mb-2">
-                  Stall Name
+                  Cafeteria Name
                 </label>
                 <input
                   type="text"
@@ -140,14 +140,14 @@ export default function VendorAuth() {
             </div>
 
             <Button type="submit" className="w-full">
-              {isSignUp ? 'Open Stall' : 'Sign In'}
+              {isSignUp ? 'Open Cafeteria' : 'Sign In'}
             </Button>
           </form>
 
           <p className="text-11px text-txtd text-center mt-6">
             {isSignUp
-              ? 'Already opened a stall? '
-              : "Need to open a stall first? "}
+              ? 'Already opened a cafeteria? '
+              : "Need to open a cafeteria first? "}
             <button
               onClick={() => setIsSignUp(!isSignUp)}
               className="text-gold hover:text-gold-2"

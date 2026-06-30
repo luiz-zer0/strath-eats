@@ -100,7 +100,7 @@ export function buildRevenueByStall(orders, stalls = []) {
   const byStall = new Map()
 
   orders.forEach(order => {
-    const name = order.stallName || namesById.get(order.stallId) || 'Unknown stall'
+    const name = order.stallName || namesById.get(order.stallId) || 'Unknown cafeteria'
     byStall.set(name, (byStall.get(name) || 0) + orderRevenue(order))
   })
 
@@ -130,7 +130,7 @@ export function toAdminOrderRow(order) {
   return {
     id: order.id,
     stu: order.userEmail || order.user || order.userId || 'Unknown',
-    stall: order.stallName || order.stall || 'Unknown stall',
+    stall: order.stallName || order.stall || 'Unknown cafeteria',
     itms: orderItems(order).map(item => {
       const name = itemName(item)
       const qty = itemQty(item)

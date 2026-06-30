@@ -122,7 +122,7 @@ export default function Landing() {
               Sign in
             </button>
             <Button variant="primary" size="sm" onClick={() => navigate('/vendor')}>
-              Open a stall
+              Open a cafeteria
             </Button>
           </div>
         </nav>
@@ -131,7 +131,7 @@ export default function Landing() {
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-8 text-center py-20">
           <Pill>
             <span className="inline-block w-2 h-2 bg-gold rounded-full mr-1.5 animate-pulse"></span>
-            {liveStallCount} stalls live now
+            {liveStallCount} cafeterias live now
           </Pill>
 
           <h1 className="mt-12 text-6xl font-bold text-[var(--text-primary)] leading-tight max-w-4xl tracking-tight">
@@ -140,7 +140,7 @@ export default function Landing() {
           </h1>
 
           <p className="mt-8 text-lg text-txt/90 max-w-2xl leading-relaxed font-light">
-            Browse live menus. Order from campus stalls. Pay via M-Pesa. Track your food in real-time.
+            Browse live menus. Order from campus cafeterias. Pay via M-Pesa. Track your food in real-time.
           </p>
 
           <div className="mt-12 flex gap-4 justify-center">
@@ -161,7 +161,7 @@ export default function Landing() {
             <div className="h-12 w-px bg-bd2"></div>
             <div className="text-center">
               <p className="text-3xl font-bold text-gold">{liveStallCount}</p>
-              <p className="text-sm text-[var(--text-muted)] mt-1">Stalls live</p>
+              <p className="text-sm text-[var(--text-muted)] mt-1">Cafeterias live</p>
             </div>
             <div className="h-12 w-px bg-bd2"></div>
             <div className="text-center">
@@ -206,7 +206,7 @@ export default function Landing() {
             {[
               { num: '1', title: 'Choose role', desc: 'Student, staff, vendor, or admin?' },
               { num: '2', title: 'Sign in', desc: 'Quick registration or login' },
-              { num: '3', title: 'Browse & order', desc: 'Pick stalls, add items, pay' },
+              { num: '3', title: 'Browse & order', desc: 'Pick cafeterias, add items, pay' },
               { num: '4', title: 'Pick up', desc: 'Order ready notification' },
             ].map((step) => (
               <div key={step.num} className="relative group">
@@ -235,11 +235,11 @@ export default function Landing() {
 
           <div className="grid grid-cols-2 gap-8">
             {[
-              { title: 'Live Menus', desc: 'Real-time updates from every stall on campus' },
+              { title: 'Live Menus', desc: 'Real-time updates from every cafeteria on campus' },
               { title: 'M-Pesa Payments', desc: 'Safe and secure mobile money checkout' },
               { title: 'Vendor Tools', desc: 'Orders, menu management, and analytics' },
               { title: 'Instant Tracking', desc: 'See your order status as it progresses' },
-              { title: 'Admin Insights', desc: 'Platform analytics and stall management' },
+              { title: 'Admin Insights', desc: 'Platform analytics and cafeteria management' },
               { title: 'Smart Notifications', desc: 'Get alerts when your order is ready' },
             ].map((feat, i) => (
               <div
@@ -282,7 +282,7 @@ export default function Landing() {
               {
 
                 role: 'Admins',
-                points: ['Platform oversight', 'Stall management', 'Revenue insights'],
+                points: ['Platform oversight', 'Cafeteria management', 'Revenue insights'],
               },
             ].map((user, i) => (
               <div
@@ -317,7 +317,7 @@ export default function Landing() {
               Start ordering now
             </Button>
             <Button variant="secondary" size="lg" onClick={() => navigate('/vendor')} className="px-10">
-              Open your stall
+              Open your cafeteria
             </Button>
           </div>
         </div>

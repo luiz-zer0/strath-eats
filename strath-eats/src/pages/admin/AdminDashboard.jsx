@@ -36,7 +36,7 @@ function useToast() {
 const NAV = [
   { key: 'overview', label: 'Overview' },
   { key: 'orders',   label: 'All Orders' },
-  { key: 'stalls',   label: 'Stalls' },
+  { key: 'stalls',   label: 'Cafeterias' },
   { key: 'users',    label: 'Users & Students' },
 ]
 
@@ -193,7 +193,7 @@ export default function AdminDashboard() {
     { label: 'Total Orders',   value: periodOrders,                                         raw: periodOrders,  trend: '+12%', color: '#60a5fa',  border: '#2563eb' },
     { label: 'Total Revenue',  value: formatCurrency(periodRevenue),                         raw: null,          trend: '+8%',  color: '#f0b429',  border: '#f0b429' },
     { label: 'Active Users',   value: allUsers.length,                                           raw: allUsers.length,   trend: '-',  color: '#4ade80',  border: '#16a34a' },
-    { label: 'Active Stalls',  value: activeStallsCount,                                     raw: activeStallsCount, trend: '-', color: '#a78bfa',  border: '#7c3aed' },
+    { label: 'Active Cafeterias',  value: activeStallsCount,                                     raw: activeStallsCount, trend: '-', color: '#a78bfa',  border: '#7c3aed' },
   ]
 
   const filteredOrders = useMemo(() => allOrders.filter(o => {
@@ -323,7 +323,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="card">
-        <div className="admin-chart-title">Revenue by Stall (KES)</div>
+        <div className="admin-chart-title">Revenue by Cafeteria (KES)</div>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={revenueByStall} layout="vertical" margin={{ left: 10, right: 40 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
@@ -357,7 +357,7 @@ export default function AdminDashboard() {
       <div className="admin-search-bar">
         <div className="admin-search-wrap">
           <input
-            placeholder="Search by order ID, student or stall..."
+            placeholder="Search by order ID, student or cafeteria..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="admin-search-input"
@@ -384,7 +384,7 @@ export default function AdminDashboard() {
           <table className="admin-table">
             <thead>
               <tr>
-                {['Order ID', 'Student', 'Stall', 'Items', 'Total', 'Type', 'Status'].map(h => (
+                {['Order ID', 'Student', 'Cafeteria', 'Items', 'Total', 'Type', 'Status'].map(h => (
                   <th key={h}>{h}</th>
                 ))}
               </tr>
@@ -423,8 +423,8 @@ export default function AdminDashboard() {
   const renderStalls = () => (
     <div>
       <div className="admin-stalls-header">
-        <h1 className="admin-stalls-title">All Stalls</h1>
-        <span className="admin-stalls-count">{stalls.length} registered stalls</span>
+        <h1 className="admin-stalls-title">All Cafeterias</h1>
+        <span className="admin-stalls-count">{stalls.length} registered cafeterias</span>
       </div>
 
       <div className="admin-stalls-list">

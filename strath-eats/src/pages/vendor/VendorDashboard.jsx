@@ -97,7 +97,7 @@ function Sidebar({ tab, setTab, user, pendingCount, onSignOut, sidebarOpen }) {
           </div>
           <div>
             <div className="vendor-user-name">{displayName}</div>
-            <div className="vendor-user-role-text">Stall vendor</div>
+            <div className="vendor-user-role-text">Cafeteria vendor</div>
           </div>
         </div>
         <button onClick={toggleTheme} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px 10px', width: '100%', textAlign: 'left', color: 'var(--text-dim)', fontFamily: "'Sora', system-ui, sans-serif", fontSize: 11, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -135,6 +135,7 @@ export default function VendorDashboard() {
   const [stall, setStall]       = useState(null)
   const [menuItems, setMenuItems] = useState([])
   const [newItem, setNewItem]   = useState({ nm: '', pr: '', cat: '', halfPr: '', fullPr: '', hasPortions: false })
+  const [editingId, setEditingId] = useState(null)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [savedAt, setSavedAt]   = useState(null)
   const [stallOnline, setStallOnline] = useState(true)
@@ -227,9 +228,9 @@ export default function VendorDashboard() {
           }
         } else {
           if (readVendorDraft(resolvedStallId)) {
-            setFirestoreError('Stall not found in Firestore — showing local cache. Menu items may be outdated.')
+            setFirestoreError('Cafeteria not found in Firestore — showing local cache. Menu items may be outdated.')
           } else {
-            setFirestoreError('Stall not found. Please contact support.')
+            setFirestoreError('Cafeteria not found. Please contact support.')
           }
         }
       },
@@ -239,7 +240,7 @@ export default function VendorDashboard() {
         console.error('Stall listener error', err)
         const msg = err?.message || String(err)
         setFirestoreError(msg)
-        addToast(`Stall sync failed: ${msg}`, 'error')
+        addToast(`Cafeteria sync failed: ${msg}`, 'error')
         if (cachedDraft) {
           hydrateStallState(cachedDraft)
         }
@@ -311,10 +312,10 @@ export default function VendorDashboard() {
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 18, color: '#f87171', marginBottom: 8 }}>Firestore error</div>
             <div style={{ color: '#94a3b8' }}>{firestoreError}</div>
-            <div style={{ marginTop: 12, color: '#64748b', fontSize: 12 }}>Check Firestore rules and ensure your account has read access to your stall and orders.</div>
+            <div style={{ marginTop: 12, color: '#64748b', fontSize: 12 }}>Check Firestore rules and ensure your account has read access to your cafeteria and orders.</div>
           </div>
         ) : (
-          'Loading your stall...'
+          'Loading your cafeteria...'
         )}
       </div>
     )
@@ -339,19 +340,33 @@ export default function VendorDashboard() {
     if (newItem.hasPortions && (!Number(newItem.halfPr) || !Number(newItem.fullPr))) {
       addToast('Please enter both half and full prices','error'); return
     }
-    const item = {
-      id: Math.max(...menuItems.map(i=>i.id),0)+1,
-      nm, cat, av: true,
-      pr: newItem.hasPortions ? Number(newItem.fullPr) : pr,
-      portions: newItem.hasPortions ? { half: Number(newItem.halfPr), full: Number(newItem.fullPr) } : null,
+
+    if (editingId) {
+      const nextMenu = menuItems.map(i =>
+        i.id === editingId ? {
+          ...i, nm, cat,
+          pr: newItem.hasPortions ? Number(newItem.fullPr) : pr,
+          portions: newItem.hasPortions ? { half: Number(newItem.halfPr), full: Number(newItem.fullPr) } : null,
+        } : i
+      )
+      setMenuItems(nextMenu)
+      persistStall({ menu: nextMenu })
+      setEditingId(null)
+      setNewItem({ nm:'', pr:'', cat:'', halfPr:'', fullPr:'', hasPortions: false })
+      addToast(`${nm} updated`, 'success')
+    } else {
+      const item = {
+        id: Math.max(...menuItems.map(i=>i.id),0)+1,
+        nm, cat, av: true,
+        pr: newItem.hasPortions ? Number(newItem.fullPr) : pr,
+        portions: newItem.hasPortions ? { half: Number(newItem.halfPr), full: Number(newItem.fullPr) } : null,
+      }
+      const nextMenu = [...menuItems, item]
+      setMenuItems(nextMenu)
+      persistStall({ menu: nextMenu })
+      setNewItem({ nm:'', pr:'', cat:'', halfPr:'', fullPr:'', hasPortions: false })
+      addToast(`${item.nm} added to menu `,'success')
     }
-    const nextMenu = [...menuItems, item]
-    setMenuItems(nextMenu)
-    persistStall({
-      menu: nextMenu,
-    })
-    setNewItem({ nm:'', pr:'', cat:'', halfPr:'', fullPr:'', hasPortions: false })
-    addToast(`${item.nm} added to menu `,'success')
   }
 
   const handleSaveSettings = () => {
@@ -390,7 +405,7 @@ export default function VendorDashboard() {
       <div className="vendor-orders-header">
         <h1 className="vendor-orders-title">Orders Queue</h1>
         <div style={{ display:'flex', alignItems:'center', gap: 10 }}>
-          <span className="vendor-stall-status-label">Stall status:</span>
+          <span className="vendor-stall-status-label">Cafeteria status:</span>
           <Toggle on={stallOnline} onToggle={() => {
             const nextOnline = !stallOnline
             setStallOnline(nextOnline)
@@ -403,7 +418,7 @@ export default function VendorDashboard() {
               mpesa: stallSettings.mpesa,
               online: nextOnline,
             })
-            addToast(nextOnline ? 'Stall is now Open ' : 'Stall set to Closed', 'info')
+            addToast(nextOnline ? 'Cafeteria is now Open ' : 'Cafeteria set to Closed', 'info')
           }} />
           <span className={`vendor-stall-status-indicator ${stallOnline ? 'open' : 'closed'}`}>
             {stallOnline ? 'Open' : 'Closed'}
@@ -540,6 +555,20 @@ export default function VendorDashboard() {
                 </div>
                 <button
                   onClick={() => {
+                    setEditingId(item.id)
+                    setNewItem({
+                      nm: item.nm,
+                      pr: item.portions ? '' : String(item.pr),
+                      cat: item.cat,
+                      halfPr: item.portions ? String(item.portions.half) : '',
+                      fullPr: item.portions ? String(item.portions.full) : '',
+                      hasPortions: !!item.portions,
+                    })
+                  }}
+                  style={{ background:'rgba(96,165,250,0.12)', border:'none', borderRadius:'50%', width:32, height:32, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, color:'#60a5fa', fontWeight:700 }}
+                >✏️</button>
+                <button
+                  onClick={() => {
                     const nextMenu = menuItems.filter(i=>i.id!==item.id)
                     setMenuItems(nextMenu)
                     persistStall({
@@ -554,7 +583,7 @@ export default function VendorDashboard() {
                     addToast('Item removed','info')
                   }}
                   className="vendor-menu-delete-btn"
-                >×</button>
+                >🗑️</button>
               </div>
             </div>
           ))}
@@ -562,7 +591,7 @@ export default function VendorDashboard() {
 
         {/* Add item form */}
         <div className="vendor-add-form">
-          <div className="vendor-add-form-title">Add New Item</div>
+          <div className="vendor-add-form-title">{editingId ? 'Edit Item' : 'Add New Item'}</div>
           <form onSubmit={handleAddItem} className="vendor-add-form-fields">
             <div>
               <label className="form-label">Dish name</label>
@@ -604,7 +633,10 @@ export default function VendorDashboard() {
               </select>
             </div>
 
-            <button type="submit" className="vendor-submit-btn">+ Add to menu</button>
+            <button type="submit" className="vendor-submit-btn">{editingId ? 'Save Changes' : '+ Add to menu'}</button>
+            {editingId && (
+              <button type="button" onClick={() => { setEditingId(null); setNewItem({ nm:'', pr:'', cat:'', halfPr:'', fullPr:'', hasPortions: false }) }} style={{ width:'100%', padding:8, marginTop:6, background:'none', border:'none', color:'var(--text-dim)', cursor:'pointer', fontSize:12, fontFamily:'inherit', fontWeight:500 }}>Cancel</button>
+            )}
           </form>
         </div>
       </div>
@@ -703,9 +735,9 @@ export default function VendorDashboard() {
 
   const renderSettings = () => (
     <div>
-      <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 4, letterSpacing:'-0.02em' }}>Stall Settings</h1>
+      <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 4, letterSpacing:'-0.02em' }}>Cafeteria Settings</h1>
       {savedAt && <div className="vendor-saved-at"> Last saved today at {savedAt}</div>}
-      {!savedAt && <div className="vendor-unsaved-hint">Configure how your stall appears to students</div>}
+      {!savedAt && <div className="vendor-unsaved-hint">Configure how your cafeteria appears to students</div>}
 
       <div className="vendor-settings-grid">
         {/* Form */}
@@ -714,8 +746,8 @@ export default function VendorDashboard() {
           {/* Online toggle */}
           <div className="vendor-settings-card vendor-settings-status-row">
             <div>
-              <div className="vendor-settings-status-label">Stall Status</div>
-              <div className="vendor-settings-status-hint">Students can only order when your stall is open</div>
+              <div className="vendor-settings-status-label">Cafeteria Status</div>
+              <div className="vendor-settings-status-hint">Students can only order when your cafeteria is open</div>
             </div>
             <div style={{ display:'flex', alignItems:'center', gap: 10 }}>
               <span style={{ fontSize:11, fontWeight:700, color: stallOnline ? '#4ade80' : '#f87171' }}>
@@ -742,7 +774,7 @@ export default function VendorDashboard() {
             <div className="vendor-settings-card-title">Basic Info</div>
             <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
               <div>
-                <label className="form-label">Stall Name</label>
+                <label className="form-label">Cafeteria Name</label>
                 <input className="form-input" value={stallSettings.name} onChange={e=>setStallSettings({...stallSettings,name:e.target.value})} />
               </div>
               <div>
@@ -802,7 +834,7 @@ export default function VendorDashboard() {
             <div className="vendor-danger-title">Danger Zone</div>
             <div className="vendor-danger-desc">These actions are irreversible. Proceed with caution.</div>
             <button
-              onClick={()=>addToast('Contact admin to permanently deactivate your stall','info')}
+              onClick={()=>addToast('Contact admin to permanently deactivate your cafeteria','info')}
               className="vendor-danger-btn"
             >
               Deactivate stall
@@ -816,7 +848,7 @@ export default function VendorDashboard() {
             Live preview
           </div>
           <div className="vendor-preview-card">
-            <div className="vendor-preview-name">{stallSettings.name || 'Stall name'}</div>
+            <div className="vendor-preview-name">{stallSettings.name || 'Cafeteria name'}</div>
             <div className="vendor-preview-cat">{stallSettings.cat || 'Category'}</div>
             <div className="vendor-preview-desc">{stallSettings.desc || 'No description yet.'}</div>
             <div className="vendor-preview-footer">

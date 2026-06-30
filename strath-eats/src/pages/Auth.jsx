@@ -123,9 +123,11 @@ export default function Auth() {
         setForm(p => ({ ...p, password: '', confirm: '' }))
         navigate('/verify-email', { state: { email: form.email, role } })
       } else {
-        await login(form.email, form.password, role)
+        const profile = await login(form.email, form.password, role)
         addToast('Welcome back!', 'success')
-        navigate('/dashboard')
+        if (profile?.role === 'vendor') navigate('/vendor/dashboard')
+        else if (profile?.role === 'admin') navigate('/admin/dashboard')
+        else navigate('/dashboard')
       }
     } catch (err) {
       const msg = err?.code === 'auth/user-not-found' ? 'No account found with this email'

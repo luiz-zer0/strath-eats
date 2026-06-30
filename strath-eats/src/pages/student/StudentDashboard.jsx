@@ -223,12 +223,13 @@ function Sidebar({ tab, setTab, orders, user, role, onSignOut, sidebarOpen, onTo
   )
 }
 
-function MenuItem({ item, inCart, onAdd, onPortionAdd }) {
+function MenuItem({ item, inCart, onAdd, onRemove, onPortionAdd }) {
   const hasPortions = !!item.portions
 
   const handleClick = () => {
     if (!item.av) return
-    if (hasPortions) onPortionAdd(item)
+    if (inCart && !hasPortions) onRemove(item)
+    else if (hasPortions) onPortionAdd(item)
     else onAdd(item, null)
   }
 
@@ -424,6 +425,11 @@ export default function StudentDashboard() {
     setPortionItem(null)
   }
 
+  const handleRemoveItem = (item) => {
+    removeFromCart(`${item.id}`)
+    addToast(`${item.nm} removed from cart`, 'info')
+  }
+
   const handleCheckout = async () => {
     if (cartItems.length === 0) { addToast('Your cart is empty', 'error'); return }
     if (!pickupTime) { addToast('Please select a pickup time', 'error'); return }
@@ -473,7 +479,7 @@ export default function StudentDashboard() {
         {!selectedStallObj ? (
           <>
             <div className="stall-count-header">
-              {stalls.length} stalls open
+              {stalls.length} cafeterias open
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
               {stalls.map(stall => (
@@ -501,7 +507,7 @@ export default function StudentDashboard() {
               onClick={() => { setSelectedStallObj(null); clearCart() }}
               className="student-back-btn"
             >
-               Back to stalls
+               Back to cafeterias
             </button>
             <div className="stall-menu-header">
               <div>
@@ -518,6 +524,7 @@ export default function StudentDashboard() {
                     item={item}
                     inCart={inCart}
                     onAdd={handleAddItem}
+                    onRemove={handleRemoveItem}
                     onPortionAdd={setPortionItem}
                   />
                 )
@@ -558,7 +565,7 @@ export default function StudentDashboard() {
             onClick={() => setTab('order')}
             className="orders-empty-btn"
           >
-            Browse stalls 
+            Browse cafeterias 
           </button>
         </div>
       ) : (

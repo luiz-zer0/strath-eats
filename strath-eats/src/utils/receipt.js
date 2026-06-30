@@ -34,7 +34,7 @@ export const generateReceiptHTML = (order, stall) => {
           <div class="label">Order ID:</div>
           <div class="value">${order.id}</div>
 
-          <div class="label" style="margin-top: 10px;">Stall:</div>
+          <div class="label" style="margin-top: 10px;">Cafeteria:</div>
           <div class="value">${stall?.name || 'N/A'}</div>
 
           <div class="label" style="margin-top: 10px;">Date & Time:</div>
