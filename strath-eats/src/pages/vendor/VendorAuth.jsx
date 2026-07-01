@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/common/Toast'
 import { Button } from '../../components/common/Button'
+import { sendPasswordReset } from '../../services/authservice'
 
 export default function VendorAuth() {
   const navigate = useNavigate()
@@ -10,6 +11,9 @@ export default function VendorAuth() {
   const { addToast } = useToast()
 
   const [isSignUp, setIsSignUp] = useState(false)
+  const [showResetForm, setShowResetForm] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetSending, setResetSending] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -139,10 +143,67 @@ export default function VendorAuth() {
               />
             </div>
 
+            {!isSignUp && (
+              <div className="flex justify-end mt-2">
+                <button
+                  type="button"
+                  onClick={() => { setShowResetForm(true); setResetEmail(formData.email) }}
+                  className="text-txs hover:text-gold transition font-bold cursor-pointer"
+                  style={{ background: 'none', border: 'none', fontSize: 12 }}
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
+
             <Button type="submit" className="w-full">
               {isSignUp ? 'Open Cafeteria' : 'Sign In'}
             </Button>
           </form>
+
+          {showResetForm && (
+            <div className="bg-navy-3 border border-bd2 rounded-sm p-4" style={{ marginTop: 12 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', marginBottom: 4 }}>Reset password</div>
+              <div style={{ fontSize: 11, color: 'var(--text-dim)', marginBottom: 12 }}>Enter your vendor email and we'll send a reset link.</div>
+              <input
+                type="email"
+                placeholder="Enter vendor email"
+                value={resetEmail}
+                onChange={e => setResetEmail(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-sm bg-navy-3 border border-bd2 text-[var(--text-primary)] placeholder-txs focus:outline-none focus:border-gold"
+                style={{ fontFamily: 'inherit', fontSize: 12 }}
+              />
+              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                <button
+                  type="button"
+                  disabled={resetSending}
+                  onClick={async () => {
+                    if (!resetEmail) { addToast('Enter your email', 'error'); return }
+                    setResetSending(true)
+                    try {
+                      await sendPasswordReset(resetEmail)
+                      addToast('Reset link sent! Check your email.', 'success')
+                      setShowResetForm(false)
+                    } catch (err) {
+                      addToast(err?.message || 'Failed to send reset email', 'error')
+                    } finally { setResetSending(false) }
+                  }}
+                  className="flex-1 px-4 py-2.5 rounded-sm bg-gold text-navy font-bold cursor-pointer"
+                  style={{ border: 'none', fontFamily: 'inherit', fontSize: 12 }}
+                >
+                  {resetSending ? 'Sending...' : 'Send Reset Link'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowResetForm(false)}
+                  className="text-txs hover:text-gold transition"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, padding: '0 8px' }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
 
           <p className="text-11px text-txtd text-center mt-6">
             {isSignUp

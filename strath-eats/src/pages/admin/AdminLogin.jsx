@@ -6,9 +6,6 @@ import { useToast } from '../../components/common/Toast'
 import { Button } from '../../components/common/Button'
 import { sendPasswordReset } from '../../services/authservice'
 
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@stratheats.com'
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'admin'
-
 export default function AdminLogin() {
   const navigate = useNavigate()
   const { login } = useAuth()
@@ -168,9 +165,6 @@ export default function AdminLogin() {
             </div>
           )}
 
-          <p className="text-11px text-txtd text-center mt-6">
-            Demo: {ADMIN_EMAIL} / {ADMIN_PASSWORD}
-          </p>
         </div>
       </div>
     </div>
