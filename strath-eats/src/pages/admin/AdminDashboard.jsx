@@ -7,6 +7,7 @@ import { subscribeToAllOrders } from '../../services/orderservice'
 import { subscribeToUsers } from '../../services/authservice'
 import { formatCurrency } from '../../utils/formatters'
 import { toAdminOrderRow } from '../../utils/analytics'
+import { downloadOrdersCSV } from '../../utils/export'
 import '../../styles/admin.css'
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, XAxis, YAxis,
@@ -98,12 +99,7 @@ function Sidebar({ tab, setTab, user, onSignOut, sidebarOpen }) {
 
 function exportCSV(data, filename) {
   if (!data.length) return
-  const headers = Object.keys(data[0]).join(',')
-  const rows = data.map(r => Object.values(r).map(v => `"${v}"`).join(',')).join('\n')
-  const blob = new Blob([headers + '\n' + rows], { type: 'text/csv' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a'); a.href = url; a.download = filename; a.click()
-  URL.revokeObjectURL(url)
+  downloadOrdersCSV(data, filename)
 }
 
 export default function AdminDashboard() {
