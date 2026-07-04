@@ -9,7 +9,7 @@ import {
   buildTopItems,
   summarizeOrders,
 } from '../../utils/analytics'
-import { downloadOrdersCSV, downloadAnalyticsCSV } from '../../utils/export'
+import { downloadOrdersCSV, openOrdersReport, openAnalyticsReport } from '../../utils/export'
 import { subscribeToStall } from '../../services/stallService'
 import { subscribeToVendorOrders, updateOrderStatus } from '../../services/orderservice'
 import { db } from '../../services/firebase'
@@ -408,6 +408,10 @@ export default function VendorDashboard() {
         <h1 className="vendor-orders-title">Orders Queue</h1>
         <div style={{ display:'flex', alignItems:'center', gap: 10 }}>
           <button
+            onClick={() => openOrdersReport(filteredOrders, 'Orders Report — ' + (stallSettings.name || 'My Cafeteria'))}
+            style={{ padding:'6px 14px', borderRadius:6, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.05)', color:'#94a3b8', cursor:'pointer', fontSize:11, fontWeight:600, fontFamily:'inherit' }}
+          >View Report</button>
+          <button
             onClick={() => downloadOrdersCSV(filteredOrders, `stratheats-orders-${new Date().toISOString().split('T')[0]}.csv`)}
             style={{ padding:'6px 14px', borderRadius:6, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.05)', color:'#94a3b8', cursor:'pointer', fontSize:11, fontWeight:600, fontFamily:'inherit' }}
           >Download CSV</button>
@@ -654,9 +658,9 @@ export default function VendorDashboard() {
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', letterSpacing:'-0.02em' }}>Analytics</h1>
         <button
-          onClick={() => downloadAnalyticsCSV(analyticsSummary, topItems, `stratheats-analytics-${new Date().toISOString().split('T')[0]}.csv`)}
+          onClick={() => openAnalyticsReport(analyticsSummary, topItems, 'Analytics Report — ' + (stallSettings.name || 'My Cafeteria'))}
           style={{ padding:'6px 14px', borderRadius:6, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.05)', color:'#94a3b8', cursor:'pointer', fontSize:11, fontWeight:600, fontFamily:'inherit' }}
-        >Download CSV</button>
+        >View Report</button>
       </div>
       {/* KPI row */}
       <div className="vendor-kpi-grid">

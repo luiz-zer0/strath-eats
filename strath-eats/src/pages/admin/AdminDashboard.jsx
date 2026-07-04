@@ -7,7 +7,7 @@ import { subscribeToAllOrders } from '../../services/orderservice'
 import { subscribeToUsers } from '../../services/authservice'
 import { formatCurrency } from '../../utils/formatters'
 import { toAdminOrderRow } from '../../utils/analytics'
-import { downloadOrdersCSV } from '../../utils/export'
+import { downloadOrdersCSV, openOrdersReport } from '../../utils/export'
 import '../../styles/admin.css'
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, XAxis, YAxis,
@@ -343,10 +343,17 @@ export default function AdminDashboard() {
       <div className="admin-orders-header">
         <h1 className="admin-orders-title">All Orders</h1>
         <button
-          onClick={() => exportCSV(filteredOrders, 'stratheats-orders.csv')}
+          onClick={() => openOrdersReport(filteredOrders, 'Orders Report — All Cafeterias')}
           className="admin-export-btn"
         >
-           Export CSV
+           View Report
+        </button>
+        <button
+          onClick={() => exportCSV(filteredOrders, 'stratheats-orders.csv')}
+          className="admin-export-btn"
+          style={{ marginLeft: 8 }}
+        >
+           Download CSV
         </button>
       </div>
 
