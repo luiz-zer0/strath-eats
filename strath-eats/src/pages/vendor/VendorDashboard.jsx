@@ -394,7 +394,8 @@ export default function VendorDashboard() {
     const FILTERS = [
       { key: 'incoming',  label: 'Incoming',  statuses: ['paid'] },
       { key: 'ongoing',   label: 'Ongoing',   statuses: ['accepted', 'preparing', 'ready'] },
-      { key: 'completed', label: 'Completed', statuses: ['collected', 'cancelled'] },
+      { key: 'completed', label: 'Completed', statuses: ['collected'] },
+      { key: 'cancelled', label: 'Cancelled', statuses: ['cancelled'] },
     ]
     const filteredOrders = orders.filter(o => {
       const f = FILTERS.find(f => f.key === orderFilter)
@@ -464,7 +465,7 @@ export default function VendorDashboard() {
         <div style={{ display:'flex', flexDirection:'column', gap: 12 }}>
           {filteredOrders.map(order => {
             const st = STATUS_CFG[order.st] || STATUS_CFG.paid
-            const isCompleted = orderFilter === 'completed'
+            const isCompleted = orderFilter === 'completed' || orderFilter === 'cancelled'
             return (
               <div key={order.id} className="card" style={{ borderLeft: `3px solid ${st.color}` }}>
                 <div className="vendor-order-header">
