@@ -89,7 +89,7 @@ export default function VendorAuth() {
 
       <div className="flex-1 flex items-center justify-center px-7 py-16">
         <div className="max-w-sm w-full">
-          <h1 className="text-3xl font-bold text-white mb-2 text-center">
+          <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2 text-center">
             {isSignUp ? 'Open Your Cafeteria' : 'Vendor Sign In'}
           </h1>
           <p className="text-txs text-center mb-8">
@@ -109,7 +109,7 @@ export default function VendorAuth() {
                   name="stallName"
                   value={formData.stallName}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 rounded-sm bg-navy-3 border border-bd2 text-white placeholder-txs focus:outline-none focus:border-gold"
+                  className="w-full px-4 py-2.5 rounded-sm bg-navy-3 border border-bd2 text-[var(--text-primary)] placeholder-txs focus:outline-none focus:border-gold"
                   placeholder="Mama Grace Kitchen"
                 />
               </div>
@@ -124,7 +124,7 @@ export default function VendorAuth() {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-sm bg-navy-3 border border-bd2 text-white placeholder-txs focus:outline-none focus:border-gold"
+                className="w-full px-4 py-2.5 rounded-sm bg-navy-3 border border-bd2 text-[var(--text-primary)] placeholder-txs focus:outline-none focus:border-gold"
                 placeholder="vendor@email.com"
               />
             </div>
@@ -138,7 +138,7 @@ export default function VendorAuth() {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-sm bg-navy-3 border border-bd2 text-white placeholder-txs focus:outline-none focus:border-gold"
+                className="w-full px-4 py-2.5 rounded-sm bg-navy-3 border border-bd2 text-[var(--text-primary)] placeholder-txs focus:outline-none focus:border-gold"
                 placeholder="••••••••"
               />
             </div>
