@@ -56,7 +56,13 @@ export default function VendorAuth() {
           navigate('/verify-email', { state: { email: formData.email, role: 'vendor' } })
         })
         .catch((err) => {
-          addToast(err?.message || 'Could not open cafeteria', 'error')
+          addToast(
+            err?.code === 'auth/email-already-in-use' ? 'An account with this email already exists'
+            : err?.code === 'auth/weak-password' ? 'Password must be at least 6 characters'
+            : err?.code === 'auth/invalid-email' ? 'Invalid email address'
+            : err?.code === 'auth/network-request-failed' ? 'Network error. Check your connection'
+            : err?.message || 'Could not open cafeteria',
+          'error')
         })
       return
     }
@@ -72,7 +78,15 @@ export default function VendorAuth() {
           navigate('/verify-email', { state: { email: formData.email, role: 'vendor' } })
           return
         }
-        addToast(err?.message || 'Unable to sign in', 'error')
+        addToast(
+          err?.code === 'auth/user-not-found' ? 'No account found with this email'
+          : err?.code === 'auth/wrong-password' ? 'Incorrect password'
+          : err?.code === 'auth/invalid-credential' ? 'Invalid email or password'
+          : err?.code === 'auth/too-many-requests' ? 'Too many attempts. Please try again later'
+          : err?.code === 'auth/invalid-email' ? 'Invalid email address'
+          : err?.code === 'auth/network-request-failed' ? 'Network error. Check your connection'
+          : err?.message || 'Unable to sign in',
+        'error')
       })
   }
 

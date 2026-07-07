@@ -5,6 +5,8 @@ import { useTheme } from '../../context/ThemeContext'
 import { subscribeToStalls } from '../../services/stallService'
 import { subscribeToAllOrders } from '../../services/orderservice'
 import { subscribeToUsers } from '../../services/authservice'
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
+import { db } from '../../services/firebase'
 import { formatCurrency } from '../../utils/formatters'
 import { toAdminOrderRow } from '../../utils/analytics'
 import { downloadOrdersCSV, openOrdersReport } from '../../utils/export'
@@ -158,9 +160,6 @@ export default function AdminDashboard() {
 
 
   const [statusFilter, setStatusFilter] = useState('all')
-  const [stallStatuses, setStallStatuses] = useState(
-    Object.fromEntries(stalls.map(s => [s.id, 'active']))
-  )
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   if (!isLoggedIn) { navigate('/admin'); return null }
@@ -432,8 +431,7 @@ export default function AdminDashboard() {
 
       <div className="admin-stalls-list">
         {stalls.map(stall => {
-          const status = stallStatuses[stall.id] || 'active'
-          const isActive = status === 'active'
+          const isActive = stall.online !== false
           return (
             <div key={stall.id} className="card" style={{ borderLeft: `3px solid ${isActive ? '#4ade80' : '#f87171'}` }}>
               <div className="admin-stall-main">
@@ -455,9 +453,14 @@ export default function AdminDashboard() {
                     <div className="admin-stall-metric-label">Menu items</div>
                   </div>
                   <button
-                    onClick={() => {
-                      setStallStatuses(p => ({ ...p, [stall.id]: isActive ? 'suspended' : 'active' }))
-                      addToast(`${stall.name} ${isActive ? 'suspended' : 'reactivated'}`, isActive ? 'error' : 'success')
+                    onClick={async () => {
+                      try {
+                        await updateDoc(doc(db, 'stalls', stall.id), { online: !isActive, updatedAt: serverTimestamp() })
+                        addToast(`${stall.name} ${isActive ? 'suspended' : 'reactivated'}`, isActive ? 'error' : 'success')
+                      } catch (err) {
+                        addToast('Failed to update cafeteria', 'error')
+                        console.error(err)
+                      }
                     }}
                     className={`admin-stall-toggle-btn ${isActive ? 'suspend' : 'reactivate'}`}
                   >
@@ -566,10 +569,10 @@ export default function AdminDashboard() {
                       <button 
                         className={`admin-stall-toggle-btn ${!isSuspended ? 'suspend' : 'reactivate'}`}
                         onClick={async () => {
+                          const newStatus = isSuspended ? 'active' : 'suspended'
                           try {
-                            const { doc, updateDoc } = await import('firebase/firestore')
-                            const { db } = await import('../../services/firebase')
-                            await updateDoc(doc(db, 'users', u.id), { status: isSuspended ? 'active' : 'suspended' })
+                            await updateDoc(doc(db, 'users', u.id), { status: newStatus })
+                            setAllUsers(prev => prev.map(u2 => u2.id === u.id ? { ...u2, status: newStatus } : u2))
                             addToast(`User ${isSuspended ? 'reactivated' : 'suspended'} successfully`, isSuspended ? 'success' : 'error')
                           } catch (err) {
                             addToast('Failed to update user', 'error')

@@ -38,14 +38,20 @@ export default function AdminLogin() {
 
     // ✨ FIX 2: Replace the hardcoded check with the real Firebase login
     try {
-      // This sends your real email and password to authservice.js, tagged as an 'admin'
       await login(formData.email, formData.password, 'admin')
       addToast('Welcome to admin portal', 'success')
       navigate('/admin/dashboard')
     } catch (error) {
       console.error('Admin login failed:', error)
-      // This will now show the actual error from Firebase if you type the wrong password!
-      addToast(error.message || 'Invalid admin credentials', 'error')
+      addToast(
+        error?.code === 'auth/user-not-found' ? 'No account found with this email'
+        : error?.code === 'auth/wrong-password' ? 'Incorrect password'
+        : error?.code === 'auth/invalid-credential' ? 'Invalid email or password'
+        : error?.code === 'auth/too-many-requests' ? 'Too many attempts. Please try again later'
+        : error?.code === 'auth/invalid-email' ? 'Invalid email address'
+        : error?.code === 'auth/network-request-failed' ? 'Network error. Check your connection'
+        : error?.message || 'Invalid admin credentials',
+      'error')
     }
   }
 
